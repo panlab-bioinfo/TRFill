@@ -66,7 +66,8 @@ hic_reads2=/data/wenhuaming/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1
 # Reference chromosomes
 chrs=("chr13" "chr14" "chr15" "chr21" "chr22")
 
-# Reference start and end positions
+# Reference start and end positions of every chrs
+# The start and end positions of the gap in "chr13" in reference genome correspond to the first indices of starts and ends respectively. The same applies to the other chromosomes. 
 starts=(15511991 10096873 15035508 11002840 12317333)
 ends=(17561453 12679517 17652018 11303875 16654016)
 
