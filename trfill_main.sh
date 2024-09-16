@@ -83,8 +83,8 @@ echo "Reference FASTA: $reference_fa"
 echo "Align PAF: $align_paf"
 echo "Jellyfish Kmer: $jellyfish_kmer"
 echo "HiFi Reads: $hifi_reads"
-echo "HiC Reads: $hic_read1"
-echo "HiC Reads: $hic_read2"
+echo "HiC Reads: $hic_reads1"
+echo "HiC Reads: $hic_reads2"
 
 echo "Chrs: ${chrs[@]}"
 echo "Starts: ${starts[@]}"
@@ -105,7 +105,6 @@ fi
 
 for ((i = 0; i < ${#chrs[@]}; i++))
 do
-    cd $output_path
     mkdir ${chrs[$i]}
     cd ${chrs[$i]}
     echo ${chrs[$i]}
@@ -116,7 +115,7 @@ do
     $reference_fa \
     $align_paf \
     $jellyfish_kmer \
-    $hifi_reads > statistic_combination.log\
+    $hifi_reads > statistic_combination.log
 #    fi
     echo "hifiasm first"
     mkdir hifiasm
@@ -159,9 +158,10 @@ do
     # uniquekmer of shore sequence and available contig sequence is obtained
     jellyfish count -t $threads -m 31 -s 1G -o mat_pat_hifi_paf_link.available.kmer mat_pat_hifi_paf_link.available.fa
     jellyfish dump -c -t -U 1 -o mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.kmer
+    
     # use uniquekmer to locate hic reads
-    kmerpos -t 64 -k 31 -C -o read1.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_read1 &
-    kmerpos -t 64 -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_read2 &
+    kmerpos -t 64 -k 31 -C -o read1.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads1 &
+    kmerpos -t 64 -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads2 &
     kmerpos -t 64 -k 31 -o ref.pos mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.fa &
     wait
     # Determine the number of anchored Hi-c > result.log
@@ -181,6 +181,6 @@ do
     kmerpos -t $threads -k 31 -o ref.pos mat_pat_centromere.uniquekmer mat_pat_centromere.fa &
     wait
     utg_hic_link.centromere.py mat_pat_centromere.fa
-    echo "phasing finished!"
+    echo "${chrs[$i]} phasing finished!"
     # TODO: assign location manually
 done

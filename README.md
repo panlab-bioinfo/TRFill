@@ -99,14 +99,25 @@ jellyfish count -t $threads -m 21 -s 1G -o reference.jf reference.fasta
 jellyfish dump -c -t -U 3 -o reference.rare.21mer reference.jf
 ```
 
+**Chromesome of reference and index of gap**
+The indices of the parameters **chrs, starts, and ends** correspond to each other. For example, the first item in chrs is ***chr13***, the first index in starts represents the start position of a gap in ***chr13***, and the first item in ends indicates the end position of that gap in ***chr13***. The same applies to **mat_starts/ends and pat_starts/ends**. It is important to note that the reference itself has no gaps; gaps exist in the current assembly. However, the positions of these gaps in the assembly chromosomes can be mapped to the corresponding positions in the reference.  
 
-
+### Output
+Pending replenishment
 
 ## Others
-<!-- 章节内容 -->
+Pending replenishment
 
 ## Citations
-<!-- 章节内容 -->
+The TRFill software and correlated algorithm is published in **Jounal(unpublished)**. If you use TRFill, please cite this paper as follows:
+****************************************
 
 ## Contact
-<!-- 章节内容 -->
+This software is developed by Professor Wei-Hua Pan's team at the Shenzhen Institute of Genome Research, Chinese Academy of Agricultural Sciences. The various functional modules are implemented by Hua-Ming Wen, while the main program integration and this README are completed by Jin-Bao Yang.
+
+If you have any questions or concerns while using the software, please submit an issue in the repository or contact us through the following methods:
+
+### Email:  
+
+**Prof. Pan:**  panweihua@caas.cn  
+**Yang Jinbao:**  yangjinbao@caas.cn
