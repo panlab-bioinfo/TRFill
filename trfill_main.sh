@@ -95,6 +95,11 @@ echo "Pat Starts: ${pat_starts[@]}"
 echo "Pat Ends: ${pat_ends[@]}"
 
 
+ploid="diploid"
+if [ "$phasing" -eq 0 ]; then
+            ploid="haploid"
+fi
+
 # main processing 
 
 # check output
@@ -137,7 +142,7 @@ do
     meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
     winnowmap -t 64 -W ref.repetitive.k19.txt -x asm5 $reference_fa hifi_paf_link.fa -o hifi_paf_linktochm13.paf
     # reference genome chromosome name, start and end, contig to reference paf, contig gfa, contig sequence, ploid, available contig sequence, sequence and direction of contig
-    genetic_algorithm.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} hifi_paf_linktochm13.paf hifi_paf_link.gfa hifi_paf_link.fa diploid hifi_paf_link.available.fa goal_combination.log > genetic_algorithm.log
+    genetic_algorithm.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} hifi_paf_linktochm13.paf hifi_paf_link.gfa hifi_paf_link.fa $ploid hifi_paf_link.available.fa goal_combination.log > genetic_algorithm.log
 
     cd ..
     if [ "$phasing" -eq 0 ]; then

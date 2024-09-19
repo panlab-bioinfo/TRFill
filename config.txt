@@ -1,15 +1,15 @@
 # Parameters
 phasing=1
-reference_fa=/data/wenhuaming/data/chm13/T2Tassembly/chm13v2.0.merge.fa
-align_paf=/data/wenhuaming/data/HG002/hifi/high/hifitochm13.paf
-jellyfish_kmer=/data/wenhuaming/data/chm13/T2Tassembly/rare21mer
+reference_fa=/data/chm13/T2Tassembly/chm13v2.0.merge.fa
+align_paf=/data/HG002/hifi/high/hifitochm13.paf
+jellyfish_kmer=/data/chm13/T2Tassembly/rare21mer
 
 # HiFi reads
-hifi_reads=/data/wenhuaming/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq 
+hifi_reads=/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq 
 
 # HiC reads
-hic_reads1=/data/wenhuaming/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fasta
-hic_reads2=/data/wenhuaming/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fasta
+hic_reads1=/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fasta
+hic_reads2=/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fasta
 
 # Reference chromosomes
 chrs=("chr13" "chr14" "chr15" "chr21" "chr22")
