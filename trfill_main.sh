@@ -78,10 +78,9 @@ while IFS= read -r line; do
 done < $config_file
 
 # print config
+echo "***********input argvs*************"
 echo "Phasing: $phasing"
 echo "Reference FASTA: $reference_fa"
-echo "Align PAF: $align_paf"
-echo "Jellyfish Kmer: $jellyfish_kmer"
 echo "HiFi Reads: $hifi_reads"
 echo "HiC Reads: $hic_reads1"
 echo "HiC Reads: $hic_reads2"
@@ -107,9 +106,19 @@ if [ "$output_path" != "./" ]; then
     mkdir -p "$output_path"
 fi
 
+cd $output_path
+# align by winnowmap
+meryl count k=15 output reference2hifi.meryl.k15 $reference_fa
+meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
+winnowmap -t 64 -W ref.repetitive.k15.txt -x map-pb $reference_fa $hifi_reads -o hifi2ref.paf
+
+# jellyfish
+jellyfish count -t $threads -m 21 -s 1G -o ref.21.jf $reference_fa
+jellyfish dump -c -t -U 1 -o ref.rare.21.kmer ref.21.jf
 
 for ((i = 0; i < ${#chrs[@]}; i++))
 do
+     
     mkdir ${chrs[$i]}
     cd ${chrs[$i]}
     echo ${chrs[$i]}
@@ -118,8 +127,8 @@ do
         # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
     statistic_test_combination -t $threads -k 21 -o statistic_combination ${chrs[$i]} ${starts[$i]} ${ends[$i]} 0.05 \
     $reference_fa \
-    $align_paf \
-    $jellyfish_kmer \
+    ../hifi2ref.paf \
+    ../ref.rare.21.kmer \
     $hifi_reads > statistic_combination.log
 #    fi
     echo "hifiasm first"
