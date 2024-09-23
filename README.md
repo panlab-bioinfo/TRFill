@@ -55,8 +55,7 @@ phasing=1
 
 # all file must be use absolute path
 reference_fa=/data/chm13/T2Tassembly/chm13v2.0.merge.fa
-align_paf=/data/HG002/hifi/high/hifitochm13.paf
-jellyfish_kmer=/data/chm13/T2Tassembly/rare21mer
+
 
 # HiFi reads
 hifi_reads=/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq 
@@ -90,19 +89,6 @@ The format of the config.txt file must follow the structure outlined above. The 
 The parameter `align_paf` is result of current HiFi reads mapping to `reference_fa` produced by **[winnowmap](https://github.com/marbl/Winnowmap.git)** (you can click this link to learn about winnowmap). You can use the following command to obtain the `align_paf`:
 
 ```sh
-# if your hifi reads named "current_hifi.fastq" and reference genome named "reference.fasta"
-meryl count k=19 output ref.meryl.k19 reference.fasta
-meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.k19.txt
-winnowmap -t 64 -W ref.k19.txt -x map-pb reference.fasta current_hifi.fastq -o hifi2reference.paf
-```
-
-The parameter `jellyfish_kmer` is a rare (unique k-mer) k-mer set of reference genome produced by **[jellyfish](https://github.com/gmarcais/Jellyfish.git)**. TRFill use 21 k lengh k-mer to locate and recall the hifi reads. You can use the following command to obtain this input file. 
-
-```
-# reference genome named "reference.fasta"
-jellyfish count -t $threads -m 21 -s 1G -o reference.jf reference.fasta
-jellyfish dump -c -t -U 3 -o reference.rare.21mer reference.jf
-```
 
 **Chromesome of reference and index of gap**
 The indices of the parameters **chrs, starts, and ends** correspond to each other. For example, the first item in chrs is ***chr13***, the first index in starts represents the start position of a gap in ***chr13***, and the first item in ends indicates the end position of that gap in ***chr13***. The same applies to **mat_starts/ends and pat_starts/ends**. It is important to note that the reference itself has no gaps; gaps exist in the current assembly. However, the positions of these gaps in the assembly chromosomes can be mapped to the corresponding positions in the reference. 
