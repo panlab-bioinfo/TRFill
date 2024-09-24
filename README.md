@@ -85,20 +85,29 @@ pat_ends=(15471497 8737488 9300453 463125 5603233)
 The format of the config.txt file must follow the structure outlined above. The parameter `phasing` is a switch that determines whether the task will run the phasing step. If `phasing=1`, TRFill will enable the phasing step and the `mat_starts, mat_ends, pat_starts, pat_ends` must be provided; otherwise, it will not be executed. 
 
 **All file paths in contig.txt must use absolute paths.**  
+For Hi-C reads, two reads files must be **fasta** format as a follow:
 
-The parameter `align_paf` is result of current HiFi reads mapping to `reference_fa` produced by **[winnowmap](https://github.com/marbl/Winnowmap.git)** (you can click this link to learn about winnowmap). You can use the following command to obtain the `align_paf`:
-
-```sh
+```
+>r1_1_1
+AACCTGCTGCT
+>r1_2_1
+CGAACGTGCTA
+......
+```
+You can switch the fastq reads file to fasta reads file by the following command:
+`sed -n '1~4s/^@/>/p;2~4p' reads.fastq > reads.fa  # For fastq`
 
 **Chromesome of reference and index of gap**
 The indices of the parameters **chrs, starts, and ends** correspond to each other. For example, the first item in chrs is ***chr13***, the first index in starts represents the start position of a gap in ***chr13***, and the first item in ends indicates the end position of that gap in ***chr13***. The same applies to **mat_starts/ends and pat_starts/ends**. It is important to note that the reference itself has no gaps; gaps exist in the current assembly. However, the positions of these gaps in the assembly chromosomes can be mapped to the corresponding positions in the reference. 
+
+As the article of TRFill, the coordinate boundaries (stars/ends) of the currently assembled gap above the reference can be obtained by using [Syri](https://github.com/schneebergerlab/syri.git) collinearity analysis. The same goes for **starts/ends of pat/mat**.
 
 ### Output
 For haploid samples(phasing=0), the result of final sequence of gap is in `result/chrN/scaffolding/hifi_paf_link.available.fa`.     
 For diploid samples (phasing=1), the final sequences of `pat/mat can be found in result/chrN/phasing/to_be_phased_centromere.fa`. However, these two sequences need to be assigned to haplotypes manually according to the `result/chrN/phasing/phase_centromere/result.log`. This `result.log` sample as follows:  
 
-```
-# result/chrN/phasing/phase_centromere/result.log
+```sh
+#result/chrN/phasing/phase_centromere/result.log
 mat000002l	pat000002l	35162
 mat000001l	pat000001l	15454
 pat000001l	pat000002l	12408
@@ -115,7 +124,8 @@ cen000001l	cen000002l	2
 mat1_cen1_mat2/pat1_cen2_pat2:	142
 mat1_cen2_mat2/pat1_cen1_pat2:	44
 
-```
+``` 
+
 The last two lines from the file above are the two sequences assigned to the two hap scores.As shown in this example, cen1 and cen2 are two sequences. When cen1 is assigned to mat and cen2 to pat, the score is 142; conversely, when cen1 is assigned to pat and cen2 to mat, the score is 44. This indicates that the correct allocation in this example is that cen1 belongs to the mat genome and cen2 belongs to the pat genome.
 
 
