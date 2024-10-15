@@ -1,0 +1,303 @@
+Threads: 32
+Output Path: result
+Config File: config.txt
+All required software are installed.
+***********input argvs*************
+Phasing: 1
+Reference FASTA: /data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa
+Current assembly: /data/wenhuaming/data/HG002/assembly/HG002.fa
+/data/wenhuaming/data/HG002/assembly/HG002.pat.chr.fa
+/data/wenhuaming/data/HG002/assembly/HG002.mat.chr.fa
+HiFi Reads: /data/wenhuaming//data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
+HiC Reads: /data/wenhuaming//data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fasta
+HiC Reads: /data/wenhuaming//data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fasta
+Chrs: chr13
+Starts: 15511991
+Ends: 17561453
+Mat Starts: 10000000
+Mat Ends: 12000000
+Pat Starts: 14028568
+Pat Ends: 15471497
+
+Found 1 command tree.
+
+Counting 2972 (estimated) million canonical 15-mers from 1 input file:
+    sequence-file: /data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa
+
+
+SIMPLE MODE
+-----------
+
+  15-mers
+    -> 1073741824 entries for counts up to 65535.
+    -> 16 Gbits memory used
+
+  3117293566 input bases
+    -> expected max count of 12469174, needing 9 extra bits.
+    -> 9216 Mbits memory used
+
+  3200 MB memory needed
+
+
+COMPLEX MODE
+------------
+
+prefix     # of   struct   kmers/    segs/      min     data    total
+  bits   prefix   memory   prefix   prefix   memory   memory   memory
+------  -------  -------  -------  -------  -------  -------  -------
+     1     2  P  1353 kB  1486 MM    84 kS   128 kB    10 GB    10 GB
+     2     4  P  1313 kB   743 MM    40 kS   256 kB    10 GB    10 GB
+     3     8  P  1279 kB   371 MM    19 kS   512 kB     9 GB     9 GB
+     4    16  P  1258 kB   185 MM  9663  S  1024 kB  9663 MB  9664 MB
+     5    32  P  1262 kB    92 MM  4646  S  2048 kB  9292 MB  9293 MB
+     6    64  P  1317 kB    46 MM  2230  S  4096 kB  8920 MB  8921 MB
+     7   128  P  1473 kB    23 MM  1069  S  8192 kB  8552 MB  8553 MB
+     8   256  P  1830 kB    11 MM   511  S    16 MB  8176 MB  8177 MB
+     9   512  P  2592 kB  5945 kM   244  S    32 MB  7808 MB  7810 MB
+    10  1024  P  4168 kB  2972 kM   117  S    64 MB  7488 MB  7492 MB
+    11  2048  P  7360 kB  1486 kM    56  S   128 MB  7168 MB  7175 MB
+    12  4096  P    13 MB   743 kM    27  S   256 MB  6912 MB  6925 MB
+    13  8192  P    26 MB   371 kM    13  S   512 MB  6656 MB  6682 MB
+    14    16 kP    51 MB   185 kM     6  S  1024 MB  6144 MB  6195 MB  Best Value!
+    15    32 kP   101 MB    92 kM     3  S  2048 MB  6144 MB  6245 MB
+    16    64 kP   203 MB    46 kM     2  S  4096 MB  8192 MB  8395 MB
+    17   128 kP   405 MB    23 kM     1  S  8192 MB  8192 MB  8597 MB
+    18   256 kP   810 MB    11 kM     1  S    16 GB    16 GB    16 GB
+    19   512 kP  1620 MB  5946  M     1  S    32 GB    32 GB    33 GB
+    20  1024 kP  3240 MB  2973  M     1  S    64 GB    64 GB    67 GB
+    21  2048 kP  6480 MB  1487  M     1  S   128 GB   128 GB   134 GB
+
+
+FINAL CONFIGURATION
+-------------------
+
+Configured simple mode for 3.125 GB memory per batch, and up to 1 batch.
+
+Start counting with SIMPLE method.
+Loading kmers from '/data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa' into buckets.
+Increasing to 17-bit storage (for kmer 0x0000000000000000).
+Increasing to 18-bit storage (for kmer 0x0000000000000000).
+Increasing to 19-bit storage (for kmer 0x0000000000000000).
+Increasing to 20-bit storage (for kmer 0x0000000000000000).
+Increasing to 21-bit storage (for kmer 0x0000000000000000).
+Increasing to 22-bit storage (for kmer 0x0000000000000000).
+
+Writing results to 'reference2hifi.meryl.k15', using 255 threads.
+             [ file ][  prefix ][  suffix ][ count-suffix ]
+   widths    [    6 ][       4 ][      20 ][            0 ]
+   number    [   64 ][      16 ][ 1048576 ][              ]
+
+finishIteration()--
+
+Cleaning up.
+
+Bye.
+
+Found 1 command tree.
+
+PROCESSING TREE #1 using 1 thread.
+  opGreaterThan
+    threshold=1473
+    fraction-distinct=0.999800
+    reference2hifi.meryl.k15
+    print to (stdout)
+
+Cleaning up.
+
+Bye.
+[M::mm_idx_gen::0.018*0.17] reading downweighted kmers
+[M::mm_idx_gen::0.045*0.66] collected downweighted kmers, no. of kmers read=66872
+[M::mm_idx_gen::0.045*0.66] saved the kmers in a bloom filter: hash functions=2 and size=961464 
+[M::mm_idx_gen::118.207*1.10] collected minimizers
+[M::mm_idx_gen::124.792*1.32] sorted minimizers
+[M::main::124.793*1.32] loaded/built the index for 25 target sequence(s)
+[M::main::124.793*1.32] running winnowmap in SV-aware mode
+[M::main::124.793*1.32] stage1-specific parameters minP:1000, incP:1.99, maxP:8000, sample:1000, min-qlen:10000, min-qcov:0.5, min-mapq:5, mid-occ:5000
+[M::main::124.793*1.32] stage2-specific parameters s2_bw:1000, s2_zdropinv:25
+[M::mm_idx_stat] kmer size: 15; skip: 50; is_hpc: 0; #seq: 25
+[M::mm_idx_stat::125.053*1.32] distinct minimizers: 23616987 (41.30% are singletons); average occurrences: 5.279; average spacing: 25.003
+[M::worker_pipeline::239.463*54.33] mapped 77760 sequences
+[M::worker_pipeline::347.372*75.46] mapped 77766 sequences
+[M::worker_pipeline::458.072*86.56] mapped 77843 sequences
+[M::worker_pipeline::564.398*93.32] mapped 77719 sequences
+[M::worker_pipeline::667.483*97.99] mapped 77785 sequences
+[M::worker_pipeline::773.600*101.35] mapped 77820 sequences
+[M::worker_pipeline::877.501*104.40] mapped 77759 sequences
+[M::worker_pipeline::983.765*106.28] mapped 77766 sequences
+[M::worker_pipeline::1086.479*108.06] mapped 77824 sequences
+[M::worker_pipeline::1190.446*109.43] mapped 77780 sequences
+[M::worker_pipeline::1297.973*110.45] mapped 77825 sequences
+[M::worker_pipeline::1404.216*111.21] mapped 77940 sequences
+[M::worker_pipeline::1515.285*111.68] mapped 77889 sequences
+[M::worker_pipeline::1623.215*112.22] mapped 77957 sequences
+[M::worker_pipeline::1728.148*112.60] mapped 77837 sequences
+[M::worker_pipeline::1833.459*113.10] mapped 77793 sequences
+[M::worker_pipeline::1941.258*113.55] mapped 77822 sequences
+[M::worker_pipeline::2054.339*113.62] mapped 77807 sequences
+[M::worker_pipeline::2176.755*113.26] mapped 77790 sequences
+[M::worker_pipeline::2286.682*113.63] mapped 77822 sequences
+[M::worker_pipeline::2397.862*113.86] mapped 77817 sequences
+[M::worker_pipeline::2507.301*114.15] mapped 77865 sequences
+[M::worker_pipeline::2617.108*114.34] mapped 77955 sequences
+[M::worker_pipeline::2726.758*114.52] mapped 77807 sequences
+[M::worker_pipeline::2837.736*114.59] mapped 77787 sequences
+[M::worker_pipeline::2947.600*114.66] mapped 77834 sequences
+[M::worker_pipeline::3054.741*114.80] mapped 77804 sequences
+[M::worker_pipeline::3082.492*114.73] mapped 18485 sequences
+[M::main] Version: 2.03, pthreads=64, omp_threads=3
+[M::main] CMD: winnowmap -t 64 -W ref.repetitive.k15.txt -x map-pb -o hifi2ref.paf /data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa /data/wenhuaming//data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
+[M::main] Real time: 3082.798 sec; CPU: 353641.119 sec; Peak RSS: 16.570 GB
+chr13
+hifiasm first
+[ERROR] Cannot find the input read file: ../statistic_combination/*.fasta
+awk: fatal: cannot open file `chr13.bp.p_utg.gfa' for reading (No such file or directory)
+Threads: 32
+Output Path: result
+Config File: config.txt
+All required software are installed.
+***********input argvs*************
+Phasing: 1
+Reference FASTA: /data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa
+Current assembly: /data/wenhuaming/data/HG002/assembly/HG002.fa
+/data/wenhuaming/data/HG002/assembly/HG002.pat.chr.fa
+/data/wenhuaming/data/HG002/assembly/HG002.mat.chr.fa
+HiFi Reads: /data/wenhuaming//data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
+HiC Reads: /data/wenhuaming//data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fasta
+HiC Reads: /data/wenhuaming//data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fasta
+Chrs: chr13
+Starts: 15511991
+Ends: 17561453
+Mat Starts: 10000000
+Mat Ends: 12000000
+Pat Starts: 14028568
+Pat Ends: 15471497
+
+Found 1 command tree.
+
+Counting 2972 (estimated) million canonical 15-mers from 1 input file:
+    sequence-file: /data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa
+
+
+SIMPLE MODE
+-----------
+
+  15-mers
+    -> 1073741824 entries for counts up to 65535.
+    -> 16 Gbits memory used
+
+  3117293566 input bases
+    -> expected max count of 12469174, needing 9 extra bits.
+    -> 9216 Mbits memory used
+
+  3200 MB memory needed
+
+
+COMPLEX MODE
+------------
+
+prefix     # of   struct   kmers/    segs/      min     data    total
+  bits   prefix   memory   prefix   prefix   memory   memory   memory
+------  -------  -------  -------  -------  -------  -------  -------
+     1     2  P  1353 kB  1486 MM    84 kS   128 kB    10 GB    10 GB
+     2     4  P  1313 kB   743 MM    40 kS   256 kB    10 GB    10 GB
+     3     8  P  1279 kB   371 MM    19 kS   512 kB     9 GB     9 GB
+     4    16  P  1258 kB   185 MM  9663  S  1024 kB  9663 MB  9664 MB
+     5    32  P  1262 kB    92 MM  4646  S  2048 kB  9292 MB  9293 MB
+     6    64  P  1317 kB    46 MM  2230  S  4096 kB  8920 MB  8921 MB
+     7   128  P  1473 kB    23 MM  1069  S  8192 kB  8552 MB  8553 MB
+     8   256  P  1830 kB    11 MM   511  S    16 MB  8176 MB  8177 MB
+     9   512  P  2592 kB  5945 kM   244  S    32 MB  7808 MB  7810 MB
+    10  1024  P  4168 kB  2972 kM   117  S    64 MB  7488 MB  7492 MB
+    11  2048  P  7360 kB  1486 kM    56  S   128 MB  7168 MB  7175 MB
+    12  4096  P    13 MB   743 kM    27  S   256 MB  6912 MB  6925 MB
+    13  8192  P    26 MB   371 kM    13  S   512 MB  6656 MB  6682 MB
+    14    16 kP    51 MB   185 kM     6  S  1024 MB  6144 MB  6195 MB  Best Value!
+    15    32 kP   101 MB    92 kM     3  S  2048 MB  6144 MB  6245 MB
+    16    64 kP   203 MB    46 kM     2  S  4096 MB  8192 MB  8395 MB
+    17   128 kP   405 MB    23 kM     1  S  8192 MB  8192 MB  8597 MB
+    18   256 kP   810 MB    11 kM     1  S    16 GB    16 GB    16 GB
+    19   512 kP  1620 MB  5946  M     1  S    32 GB    32 GB    33 GB
+    20  1024 kP  3240 MB  2973  M     1  S    64 GB    64 GB    67 GB
+    21  2048 kP  6480 MB  1487  M     1  S   128 GB   128 GB   134 GB
+
+
+FINAL CONFIGURATION
+-------------------
+
+Configured simple mode for 3.125 GB memory per batch, and up to 1 batch.
+
+Start counting with SIMPLE method.
+Loading kmers from '/data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa' into buckets.
+Increasing to 17-bit storage (for kmer 0x0000000000000000).
+Increasing to 18-bit storage (for kmer 0x0000000000000000).
+Increasing to 19-bit storage (for kmer 0x0000000000000000).
+Increasing to 20-bit storage (for kmer 0x0000000000000000).
+Increasing to 21-bit storage (for kmer 0x0000000000000000).
+Increasing to 22-bit storage (for kmer 0x0000000000000000).
+
+Writing results to 'reference2hifi.meryl.k15', using 255 threads.
+             [ file ][  prefix ][  suffix ][ count-suffix ]
+   widths    [    6 ][       4 ][      20 ][            0 ]
+   number    [   64 ][      16 ][ 1048576 ][              ]
+
+finishIteration()--
+
+Cleaning up.
+
+Bye.
+
+Found 1 command tree.
+
+PROCESSING TREE #1 using 1 thread.
+  opGreaterThan
+    threshold=1473
+    fraction-distinct=0.999800
+    reference2hifi.meryl.k15
+    print to (stdout)
+
+Cleaning up.
+
+Bye.
+[M::mm_idx_gen::0.007*1.35] reading downweighted kmers
+[M::mm_idx_gen::0.030*1.08] collected downweighted kmers, no. of kmers read=66872
+[M::mm_idx_gen::0.030*1.08] saved the kmers in a bloom filter: hash functions=2 and size=961464 
+[M::mm_idx_gen::137.246*1.09] collected minimizers
+[M::mm_idx_gen::145.178*1.22] sorted minimizers
+[M::main::145.179*1.22] loaded/built the index for 25 target sequence(s)
+[M::main::145.179*1.22] running winnowmap in SV-aware mode
+[M::main::145.179*1.22] stage1-specific parameters minP:1000, incP:1.99, maxP:8000, sample:1000, min-qlen:10000, min-qcov:0.5, min-mapq:5, mid-occ:5000
+[M::main::145.179*1.22] stage2-specific parameters s2_bw:1000, s2_zdropinv:25
+[M::mm_idx_stat] kmer size: 15; skip: 50; is_hpc: 0; #seq: 25
+[M::mm_idx_stat::145.444*1.22] distinct minimizers: 23616987 (41.30% are singletons); average occurrences: 5.279; average spacing: 25.003
+[M::worker_pipeline::353.808*40.13] mapped 77760 sequences
+[M::worker_pipeline::551.033*52.07] mapped 77766 sequences
+[M::worker_pipeline::752.821*57.75] mapped 77843 sequences
+[M::worker_pipeline::941.109*61.00] mapped 77719 sequences
+[M::worker_pipeline::1117.975*63.65] mapped 77785 sequences
+[M::worker_pipeline::1240.618*67.98] mapped 77820 sequences
+[M::worker_pipeline::1388.527*70.45] mapped 77759 sequences
+[M::worker_pipeline::1552.484*71.60] mapped 77766 sequences
+[M::worker_pipeline::1670.591*74.36] mapped 77824 sequences
+[M::worker_pipeline::1785.160*76.92] mapped 77780 sequences
+[M::worker_pipeline::1900.333*79.24] mapped 77825 sequences
+[M::worker_pipeline::2066.070*79.23] mapped 77940 sequences
+[M::worker_pipeline::2196.853*80.51] mapped 77889 sequences
+[M::worker_pipeline::2352.935*80.65] mapped 77957 sequences
+[M::worker_pipeline::2458.606*82.19] mapped 77837 sequences
+[M::worker_pipeline::2584.332*83.25] mapped 77793 sequences
+[M::worker_pipeline::2713.400*84.22] mapped 77822 sequences
+[M::worker_pipeline::2850.343*84.84] mapped 77807 sequences
+[M::worker_pipeline::2986.001*85.50] mapped 77790 sequences
+[M::worker_pipeline::3115.589*86.31] mapped 77822 sequences
+[M::worker_pipeline::3251.571*86.82] mapped 77817 sequences
+[M::worker_pipeline::3417.563*86.55] mapped 77865 sequences
+[M::worker_pipeline::3575.405*86.43] mapped 77955 sequences
+[M::worker_pipeline::3724.654*86.56] mapped 77807 sequences
+[M::worker_pipeline::3876.051*86.55] mapped 77787 sequences
+[M::worker_pipeline::3998.148*87.10] mapped 77834 sequences
+[M::worker_pipeline::4124.638*87.53] mapped 77804 sequences
+[M::worker_pipeline::4155.648*87.60] mapped 18485 sequences
+[M::main] Version: 2.03, pthreads=64, omp_threads=3
+[M::main] CMD: winnowmap -t 64 -W ref.repetitive.k15.txt -x map-pb -o hifi2ref.paf /data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa /data/wenhuaming//data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
+[M::main] Real time: 4156.271 sec; CPU: 364032.365 sec; Peak RSS: 16.739 GB
+chr13

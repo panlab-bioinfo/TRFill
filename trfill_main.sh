@@ -125,14 +125,14 @@ do
     cd ${chrs[$i]}
     echo ${chrs[$i]}
 
-   if [ ! "$i" -eq 0 ]; then
+   # if [ ! "$i" -eq 0 ]; then
     # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
     statistic_test_combination -t $threads -k 21 -o statistic_combination ${chrs[$i]} ${starts[$i]} ${ends[$i]} 0.05 \
     $reference_fa \
     ../hifi2ref.paf \
     ../ref.rare.21.kmer \
     $hifi_reads > statistic_combination.log
-    fi
+    # fi
     
     echo "hifiasm first"
     mkdir hifiasm
