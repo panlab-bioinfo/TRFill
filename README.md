@@ -118,7 +118,7 @@ As the article of TRFill, the coordinate boundaries (stars/ends) of the currentl
 
 ### Output
 For haploid samples(phasing=0), the sequence of gap produced by TRFill is in `result/chrN/scaffolding/hifi_paf_link.available.fa` and the filled chromosome N is in `result/chrN/scaffolding/chrN_filled.fasta`  
-For diploid samples (phasing=1), the two phasing sequences of gap is in `pat/mat can be found in result/chrN/phasing/to_be_phased_centromere.fa`. These two sequences will be assigned to haplotypes according to the `result/chrN/phasing/phase_centromere/result.log` and the final chromosomes filled by TRFill are in `result/chrN/phasing/phase_centromere/chrN_mat_filled.fasta` and `result/chrN/phasing/phase_centromere/chrN_pat_filled.fasta`.  
+For diploid samples (phasing=1), the two phasing sequences of gap is in `result/chrN/phasing/to_be_phased_centromere.fa`. These two sequences will be assigned to haplotypes according to the `result/chrN/phasing/phase_centromere/result.log` and the final chromosomes filled by TRFill are in `result/chrN/phasing/phase_centromere/chrN_mat_filled.fasta` and `result/chrN/phasing/phase_centromere/chrN_pat_filled.fasta`.  
 The `result.log` sample as follows:  
 
 ```sh
