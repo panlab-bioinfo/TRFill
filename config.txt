@@ -1,28 +1,38 @@
 # Parameters
 phasing=1
-reference_fa=/data/chm13/T2Tassembly/chm13v2.0.merge.fa
-align_paf=/data/HG002/hifi/high/hifitochm13.paf
-jellyfish_kmer=/data/chm13/T2Tassembly/rare21mer
+reference_fa=/data/wenhuaming//data/chm13/T2Tassembly/chm13v2.0.merge.fa
+
+# if phasing=0
+assembly=/data/wenhuaming/data/HG002/assembly/HG002.fa
+
+# if phasing=1
+assembly_mat=/data/wenhuaming/data/HG002/assembly/HG002.mat.chr.fa
+assembly_pat=/data/wenhuaming/data/HG002/assembly/HG002.pat.chr.fa
 
 # HiFi reads
-hifi_reads=/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq 
+hifi_reads=/data/wenhuaming//data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
 
 # HiC reads
-hic_reads1=/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fasta
-hic_reads2=/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fasta
+hic_reads1=/data/wenhuaming//data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fasta
+hic_reads2=/data/wenhuaming//data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fasta
 
 # Reference chromosomes
-chrs=("chr13" "chr14" "chr15" "chr21" "chr22")
+chrs=("chr13")
 
-# Reference start and end positions
-starts=(15511991 10096873 15035508 11002840 12317333)
-ends=(17561453 12679517 17652018 11303875 16654016)
+# start and end positions of current assembly gaps in reference. (Obtained by Collinearity Analysis of SyRi)
+starts=(15511991)
+ends=(17561453)
 
-# if phasing=1, you must be provide following data, otherwise the config is end here.
+# if phasing=0, you must provide a pair of indexes that are starts/ends of gap in current assembly Chr
+  
+gap_starts=(14300000)
+gap_ends=(15320000)   
+
+# if phasing=1, you must provide following data, otherwise the config is end here.
 # phasing=1, the mat hap
-mat_starts=(4041615 7694226 7879462 4222934 5408063)
-mat_ends=(4287078 8558319 10395169 5049388 8250405)
+mat_starts=(10000000)
+mat_ends=(12000000)
 
 # phasing=1, the pat hap
-pat_starts=(14028568 6975733 7060302 128989 1846531)
-pat_ends=(15471497 8737488 9300453 463125 5603233)
+pat_starts=(14028568)
+pat_ends=(15471497)

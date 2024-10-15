@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 import sys
 
-chr = sys.argv[1]
+Chr = sys.argv[1]
+
 mat_start = int(sys.argv[2])
 mat_end = int(sys.argv[3])
 pat_start = int(sys.argv[4])
 pat_end = int(sys.argv[5])
+mat_fa = sys.argv[6]
+pat_fa = sys.argv[7]
 # fa_file = sys.argv[6]
 
 """flag = 0
@@ -24,10 +27,10 @@ with open(fa_file) as file:
 
 flag = 0
 writer = open(f"mat_shores.fa","w")
-with open("/data/wenhuaming/data/HG002/assembly/HG002.mat.chr.fa") as file:
+with open(mat_fa) as file:
     for line in file:
         line = line.strip()
-        if(line[1:] == chr):
+        if(line[1:] == Chr):
             flag = 1
         elif(flag == 1):
             print(">mat000001l",file = writer)
@@ -39,10 +42,10 @@ writer.close()
 
 flag = 0
 writer = open(f"pat_shores.fa","w")
-with open("/data/wenhuaming/data/HG002/assembly/HG002.pat.chr.fa") as file:
+with open(pat_fa) as file:
     for line in file:
         line = line.strip()
-        if(line[1:] == chr):
+        if(line[1:] == Chr):
             flag = 1
         elif(flag == 1):
             print(">pat000001l",file = writer)

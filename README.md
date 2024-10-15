@@ -57,10 +57,18 @@ phasing=1
 reference_fa=/data/chm13/T2Tassembly/chm13v2.0.merge.fa
 
 
+# The current assembly genome that must be Chromesome level genome. 
+# if phasing=0, you only provide a haploid genome.
+assembly=/data/wenhuaming/data/HG002/assembly/HG002.fa
+
+# if phasing=1, you need provide two haploid chromosomes.
+assembly_mat=/data/wenhuaming/data/HG002/assembly/HG002.mat.chr.fa
+assembly_pat=/data/wenhuaming/data/HG002/assembly/HG002.pat.chr.fa
+
 # HiFi reads
 hifi_reads=/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq 
 
-# HiC reads
+# HiC reads. The format of these hic reads file is fasta with a single line sequence.
 hic_reads1=/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fasta
 hic_reads2=/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fasta
 
@@ -72,7 +80,13 @@ chrs=("chr13" "chr14" "chr15" "chr21" "chr22")
 starts=(15511991 10096873 15035508 11002840 12317333)
 ends=(17561453 12679517 17652018 11303875 16654016)
 
-# if phasing=1, you must be provide following data, otherwise the config is end here.
+
+# The location of the gap area
+
+# if phasing=0, you need to provide the positions of gaps in current assembly that the positions.
+gap_starts=(4041615 7694226 7879462 4222934 5408063)
+
+# if phasing=1, you need to provide pat and mat positions of gaps in current assembly.
 # phasing=1, the mat hap
 mat_starts=(4041615 7694226 7879462 4222934 5408063)
 mat_ends=(4287078 8558319 10395169 5049388 8250405)
@@ -97,14 +111,15 @@ CGAACGTGCTA
 You can switch the fastq reads file to fasta reads file by the following command:
 `sed -n '1~4s/^@/>/p;2~4p' reads.fastq > reads.fa  # For fastq`
 
-**Chromesome of reference and index of gap**
+**Chromesome of reference and index of gap**  
 The indices of the parameters **chrs, starts, and ends** correspond to each other. For example, the first item in chrs is ***chr13***, the first index in starts represents the start position of a gap in ***chr13***, and the first item in ends indicates the end position of that gap in ***chr13***. The same applies to **mat_starts/ends and pat_starts/ends**. It is important to note that the reference itself has no gaps; gaps exist in the current assembly. However, the positions of these gaps in the assembly chromosomes can be mapped to the corresponding positions in the reference. 
 
-As the article of TRFill, the coordinate boundaries (stars/ends) of the currently assembled gap above the reference can be obtained by using [Syri](https://github.com/schneebergerlab/syri.git) collinearity analysis. The same goes for **starts/ends of pat/mat**.
+As the article of TRFill, the coordinate boundaries (stars/ends) of the currently assembled gap above the reference can be obtained by using [Syri](https://github.com/schneebergerlab/syri.git) collinearity analysis. Users also need to provide the coordinates of the gap position in the current assembly. These coordinates correspond to the start and end coordinates on the reference assembly, derived from the collinearity of the boundaries of the gap on the current assembly. If phasing is not required (phasing=0), users only need to provide the haploid chromosome sequences that fill the gap and their corresponding position coordinates. If phasing assembly is needed (phasing=1), users must provide the coordinates of the gap on two haploid chromosomes separately, as in the example of mat_starts/mat_ends and pat_starts/pat_ends.These positions/index/coordinates correspond to positions of gap on the reference. They are obtained by collinearity analysis ([Syri](https://github.com/schneebergerlab/syri.git)). In practical application, the boundary coordinates should be extended a certain distance from both ends of the gap.
 
 ### Output
-For haploid samples(phasing=0), the result of final sequence of gap is in `result/chrN/scaffolding/hifi_paf_link.available.fa`.     
-For diploid samples (phasing=1), the final sequences of `pat/mat can be found in result/chrN/phasing/to_be_phased_centromere.fa`. However, these two sequences need to be assigned to haplotypes manually according to the `result/chrN/phasing/phase_centromere/result.log`. This `result.log` sample as follows:  
+For haploid samples(phasing=0), the sequence of gap produced by TRFill is in `result/chrN/scaffolding/hifi_paf_link.available.fa` and the filled chromosome N is in `result/chrN/scaffolding/chrN_filled.fasta`  
+For diploid samples (phasing=1), the two phasing sequences of gap is in `pat/mat can be found in result/chrN/phasing/to_be_phased_centromere.fa`. These two sequences will be assigned to haplotypes according to the `result/chrN/phasing/phase_centromere/result.log` and the final chromosomes filled by TRFill are in `result/chrN/phasing/phase_centromere/chrN_mat_filled.fasta` and `result/chrN/phasing/phase_centromere/chrN_pat_filled.fasta`.  
+The `result.log` sample as follows:  
 
 ```sh
 #result/chrN/phasing/phase_centromere/result.log

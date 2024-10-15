@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export PATH=$PATH:$SCRIPT_DIR/src/
+export PATH=$SCRIPT_DIR/src/:$PATH
 
 threads=32
 kmer_length=21
@@ -81,6 +81,8 @@ done < $config_file
 echo "***********input argvs*************"
 echo "Phasing: $phasing"
 echo "Reference FASTA: $reference_fa"
+echo "Current assembly: $assembly"
+echo -e "$assembly_pat\n$assembly_mat"
 echo "HiFi Reads: $hifi_reads"
 echo "HiC Reads: $hic_reads1"
 echo "HiC Reads: $hic_reads2"
@@ -99,7 +101,7 @@ if [ "$phasing" -eq 0 ]; then
             ploid="haploid"
 fi
 
-# main processing 
+# main processing
 
 # check output
 if [ "$output_path" != "./" ]; then
@@ -107,7 +109,7 @@ if [ "$output_path" != "./" ]; then
 fi
 
 cd $output_path
-# align by winnowmap
+#align by winnowmap
 meryl count k=15 output reference2hifi.meryl.k15 $reference_fa
 meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
 winnowmap -t 64 -W ref.repetitive.k15.txt -x map-pb $reference_fa $hifi_reads -o hifi2ref.paf
@@ -118,19 +120,20 @@ jellyfish dump -c -t -U 1 -o ref.rare.21.kmer ref.21.jf
 
 for ((i = 0; i < ${#chrs[@]}; i++))
 do
-     
-    mkdir ${chrs[$i]}
+
+    mkdir -p ${chrs[$i]}
     cd ${chrs[$i]}
     echo ${chrs[$i]}
 
-#    if [ ! "$i" -eq 0 ]; then
-        # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
+   if [ ! "$i" -eq 0 ]; then
+    # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
     statistic_test_combination -t $threads -k 21 -o statistic_combination ${chrs[$i]} ${starts[$i]} ${ends[$i]} 0.05 \
     $reference_fa \
     ../hifi2ref.paf \
     ../ref.rare.21.kmer \
     $hifi_reads > statistic_combination.log
-#    fi
+    fi
+    
     echo "hifiasm first"
     mkdir hifiasm
     cd hifiasm
@@ -138,13 +141,13 @@ do
     awk '/^S/{print ">"$2;print $3}' ${chrs[$i]}.bp.p_utg.gfa > ${chrs[$i]}.bp.p_utg.fa
     meryl count k=15 output merylDB.utg.k15 ${chrs[$i]}.bp.p_utg.fa
     meryl print greater-than distinct=0.9998 merylDB.utg.k15 > repetitive.utg.k15.txt
-    winnowmap -t 64 -W repetitive.utg.k15.txt -x map-pb ${chrs[$i]}.bp.p_utg.fa ../statistic_combination/*.fasta -o hifitoutg.paf 
-    
+    winnowmap -t 64 -W repetitive.utg.k15.txt -x map-pb ${chrs[$i]}.bp.p_utg.fa ../statistic_combination/*.fasta -o hifitoutg.paf
+
     cd ..
     mkdir scaffolding
     cd scaffolding
     hifi_paf_link.diptig_auto.py ../hifiasm/${chrs[$i]}.bp.p_utg.fa ../hifiasm/${chrs[$i]}.bp.p_utg.gfa ../hifiasm/hifitoutg.paf hifi_paf_link.gfa > hifi_paf_link.log
-    
+
 
     awk '/^S/{print ">"$2;print $3}' hifi_paf_link.gfa > hifi_paf_link.fa
     meryl count k=19 output ref.meryl.k19 $reference_fa
@@ -152,15 +155,29 @@ do
     winnowmap -t 64 -W ref.repetitive.k19.txt -x asm5 $reference_fa hifi_paf_link.fa -o hifi_paf_linktochm13.paf
     # reference genome chromosome name, start and end, contig to reference paf, contig gfa, contig sequence, ploid, available contig sequence, sequence and direction of contig
     genetic_algorithm.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} hifi_paf_linktochm13.paf hifi_paf_link.gfa hifi_paf_link.fa $ploid hifi_paf_link.available.fa goal_combination.log > genetic_algorithm.log
+    if [ "$phasing" -eq 0 ]; then
+        # argvs: current_assembly_fa gap_sequence gap_Chr_id gap_start gap_end
+        declare -i end_dis
+        echo $assembly hifi_paf_link.available.fa ${chrs[$i]} ${gap_starts[$i]} ${gap_ends[$i]}
+        end_dis=$(insert.py $assembly hifi_paf_link.available.fa ${chrs[$i]} ${gap_starts[$i]} ${gap_ends[$i]})
+        for ((j=$((i+1)); j<${#chrs[@]}; j++))
+        do
+            if [ ${chrs[$j]} == ${chrs[$i]} ]; then
+                gap_starts[$j]=$((gap_starts[$j] + end_dis))
+                gap_ends[$j]=$((gap_ends[$j] + end_dis))
+            else
+                break
+            fi
+        done
+        cd ..
+    continue
+    fi
 
     cd ..
-    if [ "$phasing" -eq 0 ]; then
-        continue
-    fi
     mkdir phasing
     cd phasing
     # shores are divided according to the target genome gap starting point and ending point.
-    shores.py ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]} ${pat_starts[$i]} ${pat_ends[$i]}
+    shores.py ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]} ${pat_starts[$i]} ${pat_ends[$i]} $assembly_mat $assembly_pat
     meryl count k=15 output merylDB.hifi_paf_link.available.k15 ../scaffolding/hifi_paf_link.available.fa
     meryl print greater-than distinct=0.9998 merylDB.hifi_paf_link.available.k15 > repetitive.hifi_paf_link.available.k15.txt
     # mapping the hifi reads to reference
@@ -172,7 +189,7 @@ do
     # uniquekmer of shore sequence and available contig sequence is obtained
     jellyfish count -t $threads -m 31 -s 1G -o mat_pat_hifi_paf_link.available.kmer mat_pat_hifi_paf_link.available.fa
     jellyfish dump -c -t -U 1 -o mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.kmer
-    
+
     # use uniquekmer to locate hic reads
     kmerpos -t 64 -k 31 -C -o read1.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads1 &
     kmerpos -t 64 -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads2 &
@@ -195,6 +212,23 @@ do
     kmerpos -t $threads -k 31 -o ref.pos mat_pat_centromere.uniquekmer mat_pat_centromere.fa &
     wait
     utg_hic_link.centromere.py mat_pat_centromere.fa
+
+
+    declare -i mat_dis pat_dis
+    read mat_dis pat_dis < <(insert_dip.py $assembly_mat $assembly_pat ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]} ${pat_starts[$i]} ${pat_ends[$i]})
+    #insert_dip.py $assembly_mat $assembly_pat ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]} ${pat_starts[$i]} ${pat_ends[$i]}
+    for ((j=$((i+1)); j<${#chrs[@]}; j++))
+    do
+        if [ ${chrs[$j]} == ${chrs[$i]} ]; then
+            mat_starts[$j]=$((mat_starts[$j] + mat_dis))
+            mat_ends[$j]=$((mat_ends[$j] + mat_dis))
+            pat_starts[$j]=$((pat_starts[$j] + pat_dis))
+            pat_ends[$j]=$((pat_ends[$j] + pat_dis))
+        else
+            break
+        fi
+    done
     echo "${chrs[$i]} phasing finished!"
-    # TODO: assign location manually
 done
+
+echo "TRFill running finished!"
