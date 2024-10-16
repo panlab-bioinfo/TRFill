@@ -18,7 +18,7 @@ TRFill consists of submodules in C++ (gcc/g++ 9.0+ is required) and Python 3.7+,
 # get software
 git clone https://github.com/panlab-bioinfo/TRFill.git
 # Compile c++ programs 
-cd TRFill/src & make
+cd TRFill/src && make
 cd ..
 # add the dictionary to environment variable
 export PATH=$PATH:you_install_path/TRFill
