@@ -12,11 +12,11 @@
 TRFill is a genomic gap-filling tool that relies on fully assembled homologous genomes, HiFi reads, and Hi-C reads. TRFill can fill gaps in complex repetitive regions of T2T assemblies and supports diploid genotype assembly for complex region gaps. In our tests, TRFill has demonstrated excellent performance in filling gaps in the human genome HG002 and several tomato genomes.
 
 ## Installation
-TRFill consists of submodules in C++ (gcc/g++ 9.0+ is required) and Python 3.7+, ultimately assembled into a pipeline using shell scripts. During its operation, it relies on **[hifiasm](https://github.com/chhylp123/hifiasm.git)=0.19.9-r616**, **[winnowmap](https://github.com/marbl/Winnowmap.git)=2.03**, and **[jellyfish](https://github.com/gmarcais/Jellyfish.git)=2.3.1**. Despite having multiple functional submodules, TRFill can be easily obtained and installed using the following command.  
+TRFill consists of submodules in C++ (gcc/g++ 9.0+ is required) and Python 3.7+, ultimately assembled into a pipeline using shell scripts. During its operation, it relies on **[hifiasm](https://github.com/chhylp123/hifiasm.git)=0.19.9-r616**, **[winnowmap](https://github.com/marbl/Winnowmap.git)=2.03**, and **[jellyfish](https://github.com/gmarcais/Jellyfish.git)=2.3.1**. All the required program need to be included in the environment path. Despite having multiple functional submodules, TRFill can be easily obtained and installed using the following command.  
 
 ```sh
 # get software
-git clone panlab-bioinfo/TRFill.git
+git clone https://github.com/panlab-bioinfo/TRFill.git
 # Compile c++ programs 
 cd TRFill/src & make
 cd ..
