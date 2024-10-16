@@ -95,6 +95,7 @@ echo "Mat Ends: ${mat_ends[@]}"
 echo "Pat Starts: ${pat_starts[@]}"
 echo "Pat Ends: ${pat_ends[@]}"
 
+step=0
 
 ploid="diploid"
 if [ "$phasing" -eq 0 ]; then
@@ -109,18 +110,20 @@ if [ "$output_path" != "./" ]; then
 fi
 
 cd $output_path
-#align by winnowmap
-meryl count k=15 output reference2hifi.meryl.k15 $reference_fa
-meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
-winnowmap -t 64 -W ref.repetitive.k15.txt -x map-pb $reference_fa $hifi_reads -o hifi2ref.paf
 
-# jellyfish
-jellyfish count -t $threads -m 21 -s 1G -o ref.21.jf $reference_fa
-jellyfish dump -c -t -U 1 -o ref.rare.21.kmer ref.21.jf
+#align by winnowmap
+    if [ "$step" -ne 1 ]; then
+    meryl count k=15 output reference2hifi.meryl.k15 $reference_fa
+    meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
+    winnowmap -t 64 -W ref.repetitive.k15.txt -x map-pb $reference_fa $hifi_reads -o hifi2ref.paf
+
+    # jellyfish
+    jellyfish count -t $threads -m 21 -s 1G -o ref.21.jf $reference_fa
+    jellyfish dump -c -t -U 1 -o ref.rare.21.kmer ref.21.jf
+fi
 
 for ((i = 0; i < ${#chrs[@]}; i++))
 do
-
     mkdir -p ${chrs[$i]}
     cd ${chrs[$i]}
     echo ${chrs[$i]}

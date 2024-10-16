@@ -12,7 +12,7 @@
 TRFill is a genomic gap-filling tool that relies on fully assembled homologous genomes, HiFi reads, and Hi-C reads. TRFill can fill gaps in complex repetitive regions of T2T assemblies and supports diploid genotype assembly for complex region gaps. In our tests, TRFill has demonstrated excellent performance in filling gaps in the human genome HG002 and several tomato genomes.
 
 ## Installation
-TRFill consists of submodules in C++ and Python, ultimately assembled into a pipeline using shell scripts. During its operation, it relies on **[hifiasm](https://github.com/chhylp123/hifiasm.git)**, **[winnowmap](https://github.com/marbl/Winnowmap.git)**, and **[jellyfish](https://github.com/gmarcais/Jellyfish.git)**. Despite having multiple functional submodules, TRFill can be easily obtained and installed using the following command.  
+TRFill consists of submodules in C++ (gcc/g++ 9.0+ is required) and Python, ultimately assembled into a pipeline using shell scripts. During its operation, it relies on **[hifiasm](https://github.com/chhylp123/hifiasm.git)**, **[winnowmap](https://github.com/marbl/Winnowmap.git)**, and **[jellyfish](https://github.com/gmarcais/Jellyfish.git)**. Despite having multiple functional submodules, TRFill can be easily obtained and installed using the following command.  
 
 ```sh
 # get software
@@ -25,6 +25,18 @@ export PATH=$PATH:you_install_path/TRFill
 # pilot run
 trfill_main.sh
 ```
+### Sample test
+We provide a small sample dataset to test whether the program installed successfully. You can unzip it and test by the following command:
+
+```sh
+# unzip the sample file
+tar -Jxvf sample.tar.xz
+cd sample
+../trfill_main.sh -c config.txt -o result
+```  
+
+If the test workflow finished (The screen show the words: TRFill running finished!), the TRFill program install successfully.  
+
 
 ## Usage
 ### 1. Main Program Usage  
