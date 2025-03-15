@@ -8,6 +8,26 @@ kmer_length=21
 output_path="./"
 config_file=""
 
+
+# process fastq/fa 
+convert_hifi_reads() {
+    local input_file=$1
+    local output_file=result/ref.fa  # Default output filename
+    # Check the file format
+    if [[ "$input_file" == *.fq || "$input_file" == *.fastq ]]; then
+        echo "Detected input file as FASTQ format. Converting to FASTA format..."
+        # Convert FASTQ to FASTA using awk
+        awk 'NR % 4 == 1 {print ">" substr($0, 2)} NR % 4 == 2 {print}' "$input_file" > "$output_file"
+        return 1
+    elif [[ "$input_file" == *.fa || "$input_file" == *.fasta ]]; then
+        return 0
+    else
+        echo "Error: Unsupported file format. Please provide a .fq, .fastq, .fa, or .fasta file."
+        return -1
+    fi
+}
+
+
 # help information
 show_help() {
     echo "Usage: $0 [-t THREADS] [-o OUTPUT_PATH] -c CONFIG_FILE"
@@ -115,7 +135,7 @@ cd $output_path
     if [ "$step" -ne 1 ]; then
     meryl count k=15 output reference2hifi.meryl.k15 $reference_fa
     meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
-    winnowmap -t 64 -W ref.repetitive.k15.txt -x map-pb $reference_fa $hifi_reads -o hifi2ref.paf
+    winnowmap -t $threads -W ref.repetitive.k15.txt -x map-pb $reference_fa $hifi_reads -o hifi2ref.paf
 
     # jellyfish
     jellyfish count -t $threads -m 21 -s 1G -o ref.21.jf $reference_fa
@@ -130,6 +150,7 @@ do
 
    # if [ ! "$i" -eq 0 ]; then
     # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
+    
     statistic_test_combination -t $threads -k 21 -o statistic_combination ${chrs[$i]} ${starts[$i]} ${ends[$i]} 0.05 \
     $reference_fa \
     ../hifi2ref.paf \
@@ -140,7 +161,7 @@ do
     echo "hifiasm first"
     mkdir hifiasm
     cd hifiasm
-    hifiasm -t 64 -o ${chrs[$i]} ../statistic_combination/*.fasta
+    hifiasm -t $threads -o ${chrs[$i]} ../statistic_combination/*.fasta
     awk '/^S/{print ">"$2;print $3}' ${chrs[$i]}.bp.p_utg.gfa > ${chrs[$i]}.bp.p_utg.fa
     meryl count k=15 output merylDB.utg.k15 ${chrs[$i]}.bp.p_utg.fa
     meryl print greater-than distinct=0.9998 merylDB.utg.k15 > repetitive.utg.k15.txt
@@ -155,7 +176,7 @@ do
     awk '/^S/{print ">"$2;print $3}' hifi_paf_link.gfa > hifi_paf_link.fa
     meryl count k=19 output ref.meryl.k19 $reference_fa
     meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
-    winnowmap -t 64 -W ref.repetitive.k19.txt -x asm5 $reference_fa hifi_paf_link.fa -o hifi_paf_linktochm13.paf
+    winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 $reference_fa hifi_paf_link.fa -o hifi_paf_linktochm13.paf
     # reference genome chromosome name, start and end, contig to reference paf, contig gfa, contig sequence, ploid, available contig sequence, sequence and direction of contig
     genetic_algorithm.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} hifi_paf_linktochm13.paf hifi_paf_link.gfa hifi_paf_link.fa $ploid hifi_paf_link.available.fa goal_combination.log > genetic_algorithm.log
     if [ "$phasing" -eq 0 ]; then
@@ -194,9 +215,9 @@ do
     jellyfish dump -c -t -U 1 -o mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.kmer
 
     # use uniquekmer to locate hic reads
-    kmerpos -t 64 -k 31 -C -o read1.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads1 &
-    kmerpos -t 64 -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads2 &
-    kmerpos -t 64 -k 31 -o ref.pos mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.fa &
+    kmerpos -t $threads -k 31 -C -o read1.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads1 &
+    kmerpos -t $threads -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads2 &
+    kmerpos -t $threads -k 31 -o ref.pos mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.fa &
     wait
     # Determine the number of anchored Hi-c > result.log
     utg_hic_link.scaffold.py mat_pat_hifi_paf_link.available.fa
@@ -208,7 +229,7 @@ do
     cd phase_centromere
     ln -s ../to_be_phased_centromere.fa to_be_phased_centromere.fa
     cat ../mat_shores.fa ../pat_shores.fa to_be_phased_centromere.fa > mat_pat_centromere.fa
-    jellyfish count -t 64 -m 31 -s 1G -o mat_pat_centromere.kmer mat_pat_centromere.fa
+    jellyfish count -t $threads -m 31 -s 1G -o mat_pat_centromere.kmer mat_pat_centromere.fa
     jellyfish dump -c -t -U 1 -o mat_pat_centromere.uniquekmer mat_pat_centromere.kmer
     kmerpos -t $threads -k 31 -C -o read1.pos mat_pat_centromere.uniquekmer $hic_reads1 &
     kmerpos -t $threads -k 31 -C -o read2.pos mat_pat_centromere.uniquekmer $hic_reads2 &
