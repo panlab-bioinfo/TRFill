@@ -7,22 +7,42 @@ threads=32
 kmer_length=21
 output_path="./"
 config_file=""
+phasing=0
+rtype=HiFi
+fmt=fq
 
 
 # process fastq/fa 
-convert_hifi_reads() {
+convert_reads() {
     local input_file=$1
-    local output_file=result/ref.fa  # Default output filename
-    # Check the file format
-    if [[ "$input_file" == *.fq || "$input_file" == *.fastq ]]; then
+    local output_file=$2  # Default output filename
+
+    # Create the output directory if it does not exist
+    # mkdir -p "$(dirname "$output_file")"
+
+    # Check the file format and process accordingly
+    if [[ "$input_file" == *.fq.gz || "$input_file" == *.fastq.gz ]]; then
+        echo "Detected input file as gzipped FASTQ format. Converting to FASTA format..."
+        
+        # Use zcat to decompress and convert FASTQ to FASTA using awk
+        zcat "$input_file" | awk 'NR % 4 == 1 {print ">" substr($0, 2)} NR % 4 == 2 {print}' > "$output_file"
+        return 1
+    elif [[ "$input_file" == *.fq || "$input_file" == *.fastq ]]; then
         echo "Detected input file as FASTQ format. Converting to FASTA format..."
         # Convert FASTQ to FASTA using awk
         awk 'NR % 4 == 1 {print ">" substr($0, 2)} NR % 4 == 2 {print}' "$input_file" > "$output_file"
         return 1
     elif [[ "$input_file" == *.fa || "$input_file" == *.fasta ]]; then
+        echo "Detected input file as FASTA format. No conversion needed."
+        cp "$input_file" "$output_file"
         return 0
+    elif [[ "$input_file" == *.bam ]]; then
+        echo "Detected input file as BAM format. Converting to FASTA format using seqkit..."
+        # Use seqkit to convert BAM to FASTA
+        seqkit bam2fq "$input_file" -o "$output_file"
+        return 1
     else
-        echo "Error: Unsupported file format. Please provide a .fq, .fastq, .fa, or .fasta file."
+        echo "Error: Unsupported file format. Please provide a .fq, .fastq, .fq.gz, .fastq.gz, .fa, .fasta, or .bam file."
         return -1
     fi
 }
@@ -30,18 +50,20 @@ convert_hifi_reads() {
 
 # help information
 show_help() {
-    echo "Usage: $0 [-t THREADS] [-o OUTPUT_PATH] -c CONFIG_FILE"
-    echo
+    echo "Usage: $0 [-t THREADS] [-o OUTPUT_PATH] [-f [HiFi/ONT]] [-p] [-b] [-h] -c CONFIG_FILE"
+    echo  echo "  -c CONFIG_FILE    Path to the configuration file"
     echo "Options:"
     echo "  -t THREADS        Number of threads to use (default: 32)"
     echo "  -o OUTPUT_PATH    Path to output directory (default: './')"
-    echo "  -c CONFIG_FILE    Path to the configuration file"
+    echo "  -f Reads_format   Input format of reads for assembly [HiFi/ONT] (default: HiFi)"
+    echo "  -p                TRFill will process phasing assembly for gap regions"
+    echo "  -b                if input HiFi reads format is bam, this option is a must"
     echo "  -h                Display this help message"
     exit 0
 }
 
 # Parse arguments
-while getopts ":t:k:o:c:h" opt; do
+while getopts ":t:k:o:c:f:pbh" opt; do
     case $opt in
         t)
             threads=$OPTARG
@@ -54,6 +76,15 @@ while getopts ":t:k:o:c:h" opt; do
             ;;
         c)
             config_file=$OPTARG
+            ;;
+        f)
+            rtype=$OPTARG
+            ;;
+        p)
+            phasing=1
+            ;;
+        b)
+            fmt=bam
             ;;
         h)
             show_help
@@ -91,18 +122,35 @@ done
 
 echo "All required software are installed."
 
-# read config content
-while IFS= read -r line; do
-    [[ "$line" =~ ^# || -z "$line" ]] && continue
-    eval "$line"
-done < $config_file
+#!/bin/bash
 
-# print config
+# Function to load configuration based on phasing value
+load_config() {
+    local config_file=$1
+    while IFS= read -r line; do
+        [[ "$line" =~ ^# || -z "$line" ]] && continue
+        eval "$line"
+    done < "$config_file"
+}
+
+# Determine which config file to use based on phasing
+if [ "$phasing" -eq 0 ]; then
+    echo "Loading haploid configuration..."
+else
+    echo "Loading diploid configuration..."
+fi
+load_config $config_file
+
+# Print configuration for verification
 echo "***********input argvs*************"
 echo "Phasing: $phasing"
-echo "Reference FASTA: $reference_fa"
-echo "Current assembly: $assembly"
-echo -e "$assembly_pat\n$assembly_mat"
+echo "Reference FASTA: $reference"
+if [ "$phasing" -eq 0 ]; then
+    echo "Current assembly: $assembly"
+else
+    echo "Maternal assembly: $assembly_mat"
+    echo "Paternal assembly: $assembly_pat"
+fi
 echo "HiFi Reads: $hifi_reads"
 echo "HiC Reads: $hic_reads1"
 echo "HiC Reads: $hic_reads2"
@@ -110,16 +158,17 @@ echo "HiC Reads: $hic_reads2"
 echo "Chrs: ${chrs[@]}"
 echo "Starts: ${starts[@]}"
 echo "Ends: ${ends[@]}"
-echo "Mat Starts: ${mat_starts[@]}"
-echo "Mat Ends: ${mat_ends[@]}"
-echo "Pat Starts: ${pat_starts[@]}"
-echo "Pat Ends: ${pat_ends[@]}"
 
-step=0
-
-ploid="diploid"
 if [ "$phasing" -eq 0 ]; then
-            ploid="haploid"
+    echo "Gap Starts: ${gap_starts[@]}"
+    echo "Gap Ends: ${gap_ends[@]}"
+    ploid="haploid"
+else
+    echo "Maternal Starts: ${mat_starts[@]}"
+    echo "Maternal Ends: ${mat_ends[@]}"
+    echo "Paternal Starts: ${pat_starts[@]}"
+    echo "Paternal Ends: ${pat_ends[@]}"
+    ploid="diploid"
 fi
 
 # main processing
@@ -131,15 +180,33 @@ fi
 
 cd $output_path
 
-#align by winnowmap
-    if [ "$step" -ne 1 ]; then
-    meryl count k=15 output reference2hifi.meryl.k15 $reference_fa
-    meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
-    winnowmap -t $threads -W ref.repetitive.k15.txt -x map-pb $reference_fa $hifi_reads -o hifi2ref.paf
+# if [ $phasing -eq 1 ]; then
+#     mkdir -p hic_reads_fa
+#     convert_reads $hic_reads1 hic_reads_fa/hic_R1.fa
+#     convert_reads $hic_reads2 hic_reads_fa/hic_R2.fa
+#     flag=$?
+#     if [ $flag -eq 1 ]; then
+#         hic_reads1=$PWD"/hic_reads_fa/hic_R1.fa"
+#         hic_reads2=$PWD"/hic_reads_fa/hic_R2.fa"
+#     fi
+# fi
 
+if [ $fmt = 'bam' ]; then
+    convert_reads $hifi_reads hifi.fastq
+    hifi_reads=hifi.fastq
+fi
+
+mkdir -p exact_reference
+#align by winnowmap
+if [ "$step" -ne 1 ]; then
+    meryl count k=15 output reference2hifi.meryl.k15 $reference
+    meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
+    winnowmap -t $threads -W ref.repetitive.k15.txt -x map-pb $reference $hifi_reads -o hifi2ref.paf
+    exact_ref.py $reference $config_file exact_reference/cut_ref.fa
     # jellyfish
-    jellyfish count -t $threads -m 21 -s 1G -o ref.21.jf $reference_fa
+    jellyfish count -t $threads -m 21 -s 1G -o ref.21.jf exact_reference/cut_ref.fa
     jellyfish dump -c -t -U 1 -o ref.rare.21.kmer ref.21.jf
+    rm ref.21.jf
 fi
 
 for ((i = 0; i < ${#chrs[@]}; i++))
@@ -148,20 +215,25 @@ do
     cd ${chrs[$i]}
     echo ${chrs[$i]}
 
-   # if [ ! "$i" -eq 0 ]; then
+    # if [ ! "$i" -eq 0 ]; then
     # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
-    
     statistic_test_combination -t $threads -k 21 -o statistic_combination ${chrs[$i]} ${starts[$i]} ${ends[$i]} 0.05 \
-    $reference_fa \
+    $reference \
     ../hifi2ref.paf \
     ../ref.rare.21.kmer \
     $hifi_reads > statistic_combination.log
     # fi
-    
     echo "hifiasm first"
     mkdir hifiasm
     cd hifiasm
-    hifiasm -t $threads -o ${chrs[$i]} ../statistic_combination/*.fasta
+    if [ "$rtype" = "HiFi" ]; then
+        hifiasm -t "$threads" -o "${chrs[$i]}" ../statistic_combination/*.fasta
+    elif [ "$rtype" = "ONT" ]; then
+        hifiasm -t "$threads" --ont -o "${chrs[$i]}" ../statistic_combination/*.fasta
+    else
+        echo "Error: Unsupported read type '$rtype'"
+        exit 1
+    fi
     awk '/^S/{print ">"$2;print $3}' ${chrs[$i]}.bp.p_utg.gfa > ${chrs[$i]}.bp.p_utg.fa
     meryl count k=15 output merylDB.utg.k15 ${chrs[$i]}.bp.p_utg.fa
     meryl print greater-than distinct=0.9998 merylDB.utg.k15 > repetitive.utg.k15.txt
@@ -174,11 +246,12 @@ do
 
 
     awk '/^S/{print ">"$2;print $3}' hifi_paf_link.gfa > hifi_paf_link.fa
-    meryl count k=19 output ref.meryl.k19 $reference_fa
+    meryl count k=19 output ref.meryl.k19 $reference
     meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
-    winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 $reference_fa hifi_paf_link.fa -o hifi_paf_linktochm13.paf
+    winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 $reference hifi_paf_link.fa -o hifi_paf_linktochm13.paf
     # reference genome chromosome name, start and end, contig to reference paf, contig gfa, contig sequence, ploid, available contig sequence, sequence and direction of contig
     genetic_algorithm.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} hifi_paf_linktochm13.paf hifi_paf_link.gfa hifi_paf_link.fa $ploid hifi_paf_link.available.fa goal_combination.log > genetic_algorithm.log
+    
     if [ "$phasing" -eq 0 ]; then
         # argvs: current_assembly_fa gap_sequence gap_Chr_id gap_start gap_end
         declare -i end_dis
@@ -213,7 +286,7 @@ do
     # uniquekmer of shore sequence and available contig sequence is obtained
     jellyfish count -t $threads -m 31 -s 1G -o mat_pat_hifi_paf_link.available.kmer mat_pat_hifi_paf_link.available.fa
     jellyfish dump -c -t -U 1 -o mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.kmer
-
+    rm mat_pat_hifi_paf_link.available.kmer
     # use uniquekmer to locate hic reads
     kmerpos -t $threads -k 31 -C -o read1.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads1 &
     kmerpos -t $threads -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads2 &
@@ -231,6 +304,7 @@ do
     cat ../mat_shores.fa ../pat_shores.fa to_be_phased_centromere.fa > mat_pat_centromere.fa
     jellyfish count -t $threads -m 31 -s 1G -o mat_pat_centromere.kmer mat_pat_centromere.fa
     jellyfish dump -c -t -U 1 -o mat_pat_centromere.uniquekmer mat_pat_centromere.kmer
+    rm mat_pat_centromere.kmer
     kmerpos -t $threads -k 31 -C -o read1.pos mat_pat_centromere.uniquekmer $hic_reads1 &
     kmerpos -t $threads -k 31 -C -o read2.pos mat_pat_centromere.uniquekmer $hic_reads2 &
     kmerpos -t $threads -k 31 -o ref.pos mat_pat_centromere.uniquekmer mat_pat_centromere.fa &

@@ -116,7 +116,7 @@ uint64_t ctoi(char c)
     case 'g':
         return 2ull;
     default:
-        return 4ull;
+        return 0ull;
     }
 }
 
@@ -126,7 +126,7 @@ uint64_t tobin(string *s)
     uint64_t k_value = 0;
     int i = (k_size - 1) * 2;
     for (auto c = s->begin(); c < s->end(); c++)
-    {
+    {   
         uint64_t v = ctoi(*c);
         if (v != 4)
         {

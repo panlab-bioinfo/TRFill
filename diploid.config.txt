@@ -1,0 +1,28 @@
+# Parameters for diploid mode
+reference=/data/wenhuaming/data/chm13/T2Tassembly/chm13v2.0.merge.fa
+
+# Maternal and paternal assemblies
+assembly_mat=/data/wenhuaming/data/HG002/assembly/HG002.mat.chr.fa
+assembly_pat=/data/wenhuaming/data/HG002/assembly/HG002.pat.chr.fa
+
+# HiFi reads
+hifi_reads=/data/wenhuaming/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
+
+# HiC reads
+hic_reads1=/data/wenhuaming/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fastq
+hic_reads2=/data/wenhuaming/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R2_001.fastq
+
+# Reference chromosomes
+chrs=("chr13")
+
+# start and end positions of current assembly gaps in reference.
+starts=(15511991)
+ends=(17561453)
+
+# Start and end positions for maternal haplotype
+mat_starts=(10000000)
+mat_ends=(12000000)
+
+# Start and end positions for paternal haplotype
+pat_starts=(14028568)
+pat_ends=(15471497)
