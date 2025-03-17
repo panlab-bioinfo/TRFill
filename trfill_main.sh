@@ -10,7 +10,7 @@ config_file=""
 phasing=0
 rtype=HiFi
 fmt=fq
-
+step=0
 
 # process fastq/fa 
 convert_reads() {
@@ -51,13 +51,14 @@ convert_reads() {
 # help information
 show_help() {
     echo "Usage: $0 [-t THREADS] [-o OUTPUT_PATH] [-f [HiFi/ONT]] [-p] [-b] [-h] -c CONFIG_FILE"
-    echo  echo "  -c CONFIG_FILE    Path to the configuration file"
+    echo "Required:"
+    echo "  -c CONFIG_FILE    Path to the configuration file"
     echo "Options:"
     echo "  -t THREADS        Number of threads to use (default: 32)"
     echo "  -o OUTPUT_PATH    Path to output directory (default: './')"
     echo "  -f Reads_format   Input format of reads for assembly [HiFi/ONT] (default: HiFi)"
-    echo "  -p                TRFill will process phasing assembly for gap regions"
-    echo "  -b                if input HiFi reads format is bam, this option is a must"
+    echo "  -p                When this parameter is enabled, TRFill will conduct phasing assembly for gap regions"
+    echo "  -b                When the format of hifi reads is bam, this parameter is required"
     echo "  -h                Display this help message"
     exit 0
 }
@@ -151,7 +152,7 @@ else
     echo "Maternal assembly: $assembly_mat"
     echo "Paternal assembly: $assembly_pat"
 fi
-echo "HiFi Reads: $hifi_reads"
+echo "Reads: $reads"
 echo "HiC Reads: $hic_reads1"
 echo "HiC Reads: $hic_reads2"
 
@@ -172,6 +173,7 @@ else
 fi
 
 # main processing
+config_full=$(readlink -f $config_file)
 
 # check output
 if [ "$output_path" != "./" ]; then
@@ -192,17 +194,17 @@ cd $output_path
 # fi
 
 if [ $fmt = 'bam' ]; then
-    convert_reads $hifi_reads hifi.fastq
-    hifi_reads=hifi.fastq
+    convert_reads $reads hifi.fastq
+    reads=hifi.fastq
 fi
 
-mkdir -p exact_reference
-#align by winnowmap
+mkdir -p exact_reference 
+#align by winnowmap 
 if [ "$step" -ne 1 ]; then
     meryl count k=15 output reference2hifi.meryl.k15 $reference
     meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
-    winnowmap -t $threads -W ref.repetitive.k15.txt -x map-pb $reference $hifi_reads -o hifi2ref.paf
-    exact_ref.py $reference $config_file exact_reference/cut_ref.fa
+    winnowmap -t $threads -W ref.repetitive.k15.txt -x map-pb $reference $reads -o hifi2ref.paf
+    exact_ref.py $reference $config_full exact_reference/cut_ref.fa
     # jellyfish
     jellyfish count -t $threads -m 21 -s 1G -o ref.21.jf exact_reference/cut_ref.fa
     jellyfish dump -c -t -U 1 -o ref.rare.21.kmer ref.21.jf
@@ -221,7 +223,7 @@ do
     $reference \
     ../hifi2ref.paf \
     ../ref.rare.21.kmer \
-    $hifi_reads > statistic_combination.log
+    $reads > statistic_combination.log
     # fi
     echo "hifiasm first"
     mkdir hifiasm
@@ -279,7 +281,7 @@ do
     meryl print greater-than distinct=0.9998 merylDB.hifi_paf_link.available.k15 > repetitive.hifi_paf_link.available.k15.txt
     # mapping the hifi reads to reference
     winnowmap -t $threads -W repetitive.hifi_paf_link.available.k15.txt -x map-pb -o hifitohifi_paf_link.available.paf \
-    ../scaffolding/hifi_paf_link.available.fa $hifi_reads
+    ../scaffolding/hifi_paf_link.available.fa $reads
     # link the contig > link.log
     get_link.py > link.log
     cat mat_shores.fa pat_shores.fa ../scaffolding/hifi_paf_link.available.fa > mat_pat_hifi_paf_link.available.fa

@@ -5,8 +5,9 @@ reference=/data/wenhuaming/data/chm13/T2Tassembly/chm13v2.0.merge.fa
 assembly_mat=/data/wenhuaming/data/HG002/assembly/HG002.mat.chr.fa
 assembly_pat=/data/wenhuaming/data/HG002/assembly/HG002.pat.chr.fa
 
-# HiFi reads
-hifi_reads=/data/wenhuaming/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
+# reads, HiFi/ONT
+reads=/data/wenhuaming/data/HG002/hifi/high/m64015_190922_010918.Q20.fastq
+
 
 # HiC reads
 hic_reads1=/data/wenhuaming/data/HG002/hic/high/HG002.HiC_2_NovaSeq_rep1_run2_S1_L001_R1_001.fastq

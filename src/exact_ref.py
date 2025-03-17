@@ -34,6 +34,7 @@ def extract_sequences(reference_fa, chrs, starts, ends):
     records = SeqIO.index(reference_fa, "fasta")
     
     for chr_name, start, end in zip(chrs, starts, ends):
+        chr_name = chr_name.replace("\"", "")
         if chr_name in records:
             seq = str(records[chr_name].seq[start-1:end])
             sequences[chr_name] = seq
@@ -53,7 +54,7 @@ def write_sequences_to_fasta(sequences, output_file):
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Usage: script.py <reference.fa> <config_file> <output.fa>")
+        print("Usage: exact_ref.py <reference.fa> <config_file> <output.fa>")
         sys.exit(1)
 
     reference_fa = sys.argv[1]
