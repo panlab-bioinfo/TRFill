@@ -18,7 +18,8 @@ def read_config(config_file):
             # Handle lists like chrs, starts, ends
             if key in ['chrs', 'starts', 'ends']:
                 value = list(map(lambda x: int(x) if x.lstrip('-').isdigit() else x, value.strip('()').split()))
-            config[key.strip()] = value.strip() if isinstance(value, str) else value
+            # key_tmp = key.strip().replace("\"", "")
+            config[key] = value.strip() if isinstance(value, str) else value
     return config
 
 def extract_sequences(reference_fa, chrs, starts, ends):
@@ -32,9 +33,11 @@ def extract_sequences(reference_fa, chrs, starts, ends):
     """
     sequences = {}
     records = SeqIO.index(reference_fa, "fasta")
-    
+    print(chrs, starts, ends)
+    print(records)
     for chr_name, start, end in zip(chrs, starts, ends):
         chr_name = chr_name.replace("\"", "")
+        print(chr_name)
         if chr_name in records:
             seq = str(records[chr_name].seq[start-1:end])
             sequences[chr_name] = seq

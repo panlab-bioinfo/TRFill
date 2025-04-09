@@ -2,6 +2,8 @@
 
 TRFill is a chromosom-level gap-filling tool that leverages fully assembled homologous genomes, HiFi/ONT reads, and Hi-C reads to fill gaps in complex repetitive regions of T2T assemblies. It supports diploid genotype assembly for complex region gaps and has demonstrated high performance in filling gaps in human (HG002) and tomato genomes.
 
+
+
 ## Contents
 - [Introduction](#introduction)
 - [Installation](#installation)
@@ -9,6 +11,10 @@ TRFill is a chromosom-level gap-filling tool that leverages fully assembled homo
 - [Others](#others)
 - [Citations](#citations)
 - [Contact](#contact)
+
+## The workflow of pipline for trfill is as follows  
+![workflow](./images/workflow.png)  
+
 
 ## Introduction
 TRFill is a genomic gap-filling tool that relies on fully assembled homologous genomes, HiFi reads, and Hi-C reads. TRFill can fill gaps in complex repetitive regions of T2T assemblies and supports diploid genotype assembly for complex region gaps. In our tests, TRFill has demonstrated excellent performance in filling gaps in the human genome HG002 and several tomato genomes.
@@ -170,34 +176,13 @@ The coordinate boundaries (starts/ends) of gaps in the current assembly relative
 
 ### 3. Option parameters  
 `-f`: ONT reads can be supported and use this param to enable. But hifi is highly recommended because of the high accuracy.  
-`-b`: For hifi reads input, the format can use bam and TRFill will use `seqkit` to switch the bam to fastq.  
+`-b`: For hifi reads input, the format can use bam and TRFill will use `samtools` to switch the bam to fastq. 
 
 ### 4. Output
-For haploid samples(phasing=0), the sequence of gap produced by TRFill is in `result/chrN/scaffolding/hifi_paf_link.available.fa` and the filled chromosome N is in `result/chrN/scaffolding/chrN_filled.fasta`  
-For diploid samples (phasing=1), the two phasing sequences of gap is in `result/chrN/phasing/to_be_phased_centromere.fa`. These two sequences will be assigned to haplotypes according to the `result/chrN/phasing/phase_centromere/result.log` and the final chromosomes filled by TRFill are in `result/chrN/phasing/phase_centromere/chrN_mat_filled.fasta` and `result/chrN/phasing/phase_centromere/chrN_pat_filled.fasta`.  
-The `result.log` sample as follows:  
 
-```sh
-#result/chrN/phasing/phase_centromere/result.log
-mat000002l	pat000002l	35162
-mat000001l	pat000001l	15454
-pat000001l	pat000002l	12408
-mat000002l	pat000001l	11545
-cen000002l	pat000001l	131
-mat000001l	pat000002l	92
-mat000001l	mat000002l	75
-cen000001l	pat000001l	42
-cen000002l	pat000002l	5
-cen000001l	mat000002l	4
-cen000001l	mat000001l	2
-cen000002l	mat000002l	2
-cen000001l	cen000002l	2
-mat1_cen1_mat2/pat1_cen2_pat2:	142
-mat1_cen2_mat2/pat1_cen1_pat2:	44
-
-``` 
-
-The last two lines from the file above are the two sequences assigned to the two hap scores.As shown in this example, cen1 and cen2 are two sequences. When cen1 is assigned to mat and cen2 to pat, the score is 142; conversely, when cen1 is assigned to pat and cen2 to mat, the score is 44. This indicates that the correct allocation in this example is that cen1 belongs to the mat genome and cen2 belongs to the pat genome.
+1. The filled chromosomes seq are in the path of `output/final_result`  
+2. For haploid samples, the sequence of gap produced by TRFill is in `result/chrN/scaffolding/hifi_paf_link.available.fa`  
+3. For diploid samples, the two phasing sequences of gap is in `result/chrN/phasing/to_be_phased_centromere.fa`.
 
 
 ## Others
