@@ -138,7 +138,7 @@ def main():
     records = process_paf(args.paf)
     gap_seq = SeqIO.read(args.gap_fasta, "fasta")
     start_trim, end_trim, ori = get_optimal_gap_alignment(records, args.chromosome, len(gap_seq.seq))
-    trimed_seq = gap_seq.seq[start_trim:end_trim]
+    trimed_seq = gap_seq.seq[start_trim : end_trim]
     if start_trim == 0:
         trimed_seq =Seq.Seq('N'*100 + str(trimed_seq))
     if end_trim == len(gap_seq):
@@ -149,7 +149,7 @@ def main():
         print(f"The oriorientation of gap filled back for {args.chromosome} is: -")
     else:
         print(f"The oriorientation of gap filled back for {args.chromosome} is: +")
-    print(f"the trimmed coordation of gap for {args.chromosome} is: {start_trim}{end_trim}")
+    print(f"the trimmed coordation of gap for {args.chromosome} is: {start_trim}\t{end_trim}")
     assembly = SeqIO.parse(args.assembly_fasta, "fasta")
     for chr in assembly:
         if chr.id == args.chromosome:

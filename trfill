@@ -189,7 +189,7 @@ fi
 
 cd $output_path
 
-# convert_reads $reference reference.fa
+convert_reads $reference reference.fa
  reference=$(pwd)"/reference.fa"
 # if [ $phasing -eq 1 ]; then
 #     mkdir -p hic_reads_fa
@@ -209,7 +209,7 @@ fi
 
 mkdir -p exact_reference 
 #align by winnowmap 
-if [ "$step" -ne 0 ]; then
+if [ "$step" -ne 1 ]; then
     meryl count k=15 output reference2hifi.meryl.k15 $reference
     meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
     echo "merly constract finished!"
@@ -225,7 +225,6 @@ if [ "$step" -ne 0 ]; then
     rm ref.cut.21.kmer ref.raw.21.kmer 
 fi
 
-# jellyfish
 
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] filling gap start"
@@ -237,31 +236,31 @@ do
     cd ${chrs[$i]}
     echo ${chrs[$i]}
 
-    # # if [ ! "$i" -eq 0 ]; then
-    # # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
-    # echo recall
-    # statistic_test_combination -t $threads -k 21 -o statistic_combination ${chrs[$i]} ${starts[$i]} ${ends[$i]} 0.05 \
-    # $reference \
-    # ../hifi2ref.paf \
-    # ../ref.rare.21.kmer \
-    # $reads > statistic_combination.log
-    # # fi
-    # echo "hifiasm first"
-    # mkdir -p hifiasm
-    # cd hifiasm
-    # if [ "$rtype" = "HiFi" ]; then
-    #     hifiasm -t "$threads" -o "${chrs[$i]}" ../statistic_combination/*.fasta
-    # elif [ "$rtype" = "ONT" ]; then
-    #     hifiasm -t "$threads" --ont -o "${chrs[$i]}" ../statistic_combination/*.fasta
-    # else
-    #     echo "Error: Unsupported read type '$rtype'"
-    #     exit 1
+    # if [ ! "$i" -eq 0 ]; then
+    # Thread, kmer size, output directory, reference genome chromosome name, reference genome chromosome start and end, confidence P-value, reference genome sequence, read comparison to the reference genome paf, jellyfish Reference rare kmer, hifi read file
+    echo recall
+    statistic_test_combination -t $threads -k 21 -o statistic_combination ${chrs[$i]} ${starts[$i]} ${ends[$i]} 0.05 \
+    $reference \
+    ../hifi2ref.paf \
+    ../ref.rare.21.kmer \
+    $reads > statistic_combination.log
     # fi
-    # awk '/^S/{print ">"$2;print $3}' ${chrs[$i]}.bp.p_utg.gfa > ${chrs[$i]}.bp.p_utg.fa
-    # meryl count k=15 output merylDB.utg.k15 ${chrs[$i]}.bp.p_utg.fa
-    # meryl print greater-than distinct=0.9998 merylDB.utg.k15 > repetitive.utg.k15.txt
-    # winnowmap -t 64 -W repetitive.utg.k15.txt -x map-pb ${chrs[$i]}.bp.p_utg.fa ../statistic_combination/*.fasta -o hifitoutg.paf
-    # cd ..
+    echo "hifiasm first"
+    mkdir -p hifiasm
+    cd hifiasm
+    if [ "$rtype" = "HiFi" ]; then
+        hifiasm -t "$threads" -o "${chrs[$i]}" ../statistic_combination/*.fasta
+    elif [ "$rtype" = "ONT" ]; then
+        hifiasm -t "$threads" --ont -o "${chrs[$i]}" ../statistic_combination/*.fasta
+    else
+        echo "Error: Unsupported read type '$rtype'"
+        exit 1
+    fi
+    awk '/^S/{print ">"$2;print $3}' ${chrs[$i]}.bp.p_utg.gfa > ${chrs[$i]}.bp.p_utg.fa
+    meryl count k=15 output merylDB.utg.k15 ${chrs[$i]}.bp.p_utg.fa
+    meryl print greater-than distinct=0.9998 merylDB.utg.k15 > repetitive.utg.k15.txt
+    winnowmap -t 64 -W repetitive.utg.k15.txt -x map-pb ${chrs[$i]}.bp.p_utg.fa ../statistic_combination/*.fasta -o hifitoutg.paf
+    cd ..
     echo scaffolding
     mkdir -p scaffolding
     cd scaffolding
@@ -277,7 +276,7 @@ do
     cd ..
 
     if [ $phasing -eq 1 ];then 
-        mkdir phasing
+        mkdir -p phasing
         cd phasing
         # shores are divided according to the target genome gap starting point and ending point.
         shores.py ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]} ${pat_starts[$i]} ${pat_ends[$i]} $assembly_mat $assembly_pat
@@ -298,9 +297,9 @@ do
         kmerpos -t $threads -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads2 &
         kmerpos -t $threads -k 31 -o ref.pos mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.fa &
         wait
-        # Determine the number of anchored Hi-c > result.log
+        Determine the number of anchored Hi-c > result.log
         utg_hic_link.scaffold.py mat_pat_hifi_paf_link.available.fa
-        # Reference genome chromosome name and start and end, sequence and direction of contig, gfa of contig, available contig sequence, available contig sequence and shore sequence, hic connection, hifi connection
+        Reference genome chromosome name and start and end, sequence and direction of contig, gfa of contig, available contig sequence, available contig sequence and shore sequence, hic connection, hifi connection
         phasing_by_simulated_annealing.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} ../scaffolding/goal_combination.log ../scaffolding/hifi_paf_link.gfa ../scaffolding/hifi_paf_link.available.fa mat_pat_hifi_paf_link.available.fa result.log link.log > phasing_by_simulated_annealing.log
 
         # Assign the two sequences to different hap
@@ -316,8 +315,7 @@ do
         kmerpos -t $threads -k 31 -o ref.pos mat_pat_centromere.uniquekmer mat_pat_centromere.fa &
         wait
         utg_hic_link.centromere.py mat_pat_centromere.fa
-        rm *.pos
-        rm 
+        # rm -rf *.pos
         cd ..
         cd ..
     fi
@@ -341,9 +339,11 @@ do
 done
 fi # if ass
 # Fill back to the assmelby
+echo start fill gap back
 mkdir filled_result
 if [ "$phasing" -eq 0 ]; then
     # argvs: current_assembly_fa gap_sequence gap_Chr_id gap_start gap_end
+    echo "Haploid filled"
     cd filled_result
     mkdir shores
     # output:{chr_name}.shores.fa
@@ -386,17 +386,19 @@ if [ "$phasing" -eq 0 ]; then
     # done
     # cd ..
 else
+    echo "diploid filled"
     cd filled_result
     mkdir shores
     mkdir gap_seq
     # output:{chr_name}.shores.fa
-    exact_assembly_dip.py $assembly $config_full shores/
+    exact_assembly_dip.py $config_full shores/
     mkdir hic_aln
     mkdir final_result
     for ((i = 0; i < ${#chrs[@]}; i++))
     do  
-        declare -i phase_mark
+        # declare -i phase_mark
         phase_mark=$(phase_result.py "../../${chrs[$i]}/phasing/phase_centromere/result.log")
+        echo $phase_mark
         # ${chrs[$i]} ${starts[$i]} ${ends[$i]}
         awk 'NR==1{print $0 > "gap_seq/cen1.fasta"; next}
             NR==2{print $0 >> "gap_seq/cen1.fasta"; next}
@@ -404,29 +406,29 @@ else
             NR==4{print $0 >> "gap_seq/cen2.fasta"}' "../../${chrs[$i]}/phasing/to_be_phased_centromere.fa"
         
         #mat
-        if [ $phase_mark -eq 1 ]; then
+        if [ $phase_mark == "1" ]; then
             gap_mat=gap_seq/cen1.fasta
             gap_pat=gap_seq/cen2.fasta
-        elif [ $phase_mark -eq 0 ]; then
+        elif [ $phase_mark == "0" ]; then
             gap_mat=gap_seq/cen2.fasta
             gap_pat=gap_seq/cen1.fasta
         else
             echo "Phasing result is not correct."
             exit 1
         fi
-        mkdir -p filled_result/tmp
+        mkdir -p tmp
         meryl count k=19 output ref.meryl.k19 shores/mat/${chrs[$i]}.shores.fa
         meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
         winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 shores/mat/${chrs[$i]}.shores.fa $gap_mat -o tmp/${chrs[$i]}.shores2mat.paf
-        gap_fill.py tmp/${chrs[$i]}.shores2mat.paf $assembly_mat  ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]}  final_result/${chrs[$i]}.mat.fasta
+        gap_fill.py tmp/${chrs[$i]}.shores2mat.paf $assembly_mat $gap_mat  ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]}  final_result/${chrs[$i]}.mat.fasta
         meryl count k=19 output ref.meryl.k19 shores/pat/${chrs[$i]}.shores.fa
         meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
         winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 shores/pat/${chrs[$i]}.shores.fa $gap_pat -o tmp/${chrs[$i]}.shores2pat.paf
-        gap_fill.py tmp/${chrs[$i]}.shores2pat.paf $assembly_pat  ${chrs[$i]} ${pat_starts[$i]} ${pat_ends[$i]}  final_result/${chrs[$i]}.pat.fasta
+        gap_fill.py tmp/${chrs[$i]}.shores2pat.paf $assembly_pat  $gap_pat ${chrs[$i]} ${pat_starts[$i]} ${pat_ends[$i]}  final_result/${chrs[$i]}.pat.fasta
     done
-
+    cd ..
 fi
-cd ..
-ln -s $PWD/filled_result/final_result 
+# cd ..
+ln -s $PWD/filled_result/final_result
 
 echo "TRFill running finished!"

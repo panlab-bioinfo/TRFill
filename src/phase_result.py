@@ -21,7 +21,7 @@ def read_and_compare_values(log_file):
             return
         
         # 比较两个浮点数值
-        print(val1, val2)
+        # print(val1, val2)
         if val1 >= val2:
             print("0")
         elif val1 < val2:

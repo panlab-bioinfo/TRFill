@@ -35,7 +35,7 @@ def write_sequences_to_fasta(sequences, output_file):
         for chr_name, seq in sequences.items():
             f.write(f">{chr_name}\n{seq}\n")
 
-def extract_sequences(reference_fa, chrs, starts, ends, output, diptype):
+def extract_sequences(reference_fa, chrs, starts, ends, output):
     """
     Extracts sequences from the reference FASTA file based on chromosome names and positions.
     :param reference_fa: Path to the reference FASTA file.
@@ -60,8 +60,8 @@ def extract_sequences(reference_fa, chrs, starts, ends, output, diptype):
             chr_name_l = chr_name+"_l"
             chr_name_r = chr_name+"_r"
             total_len = len(records[chr_name].seq)
-            seq_l = str(records[chr_name].seq[min(start-10000, 0):start])
-            seq_r = str(records[chr_name].seq[end, max(end+10000, total_len)])
+            seq_l = str(records[chr_name].seq[max(start-10000, 0):start])
+            seq_r = str(records[chr_name].seq[end: min(end+10000, total_len)])
             sequences[chr_name_l] = seq_l
             sequences[chr_name_r] = seq_r
             write_sequences_to_fasta(sequences, output+"/"+chr_name+".shores.fa")
@@ -75,8 +75,8 @@ def extract_sequences(reference_fa, chrs, starts, ends, output, diptype):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: exact_assembly_hap.py <config_file> <output_path>")
+    if len(sys.argv) != 3:
+        print("Usage: exact_assembly_dip.py <config_file> <output_path>")
         sys.exit(1)
 
     config_file = sys.argv[1]

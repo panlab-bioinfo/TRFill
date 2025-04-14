@@ -57,8 +57,8 @@ def extract_sequences(reference_fa, chrs, starts, ends, output):
             chr_name_l = chr_name+"_l"
             chr_name_r = chr_name+"_r"
             total_len = len(records[chr_name].seq)
-            seq_l = str(records[chr_name].seq[min(start-10000, 0):start])
-            seq_r = str(records[chr_name].seq[end:max(end+10000, total_len)])
+            seq_l = str(records[chr_name].seq[max(start-10000, 0):start])
+            seq_r = str(records[chr_name].seq[end:min(end+10000, total_len)])
             sequences[chr_name_l] = seq_l
             sequences[chr_name_r] = seq_r
             write_sequences_to_fasta(sequences, output+"/"+chr_name+".shores.fa")

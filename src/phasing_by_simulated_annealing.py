@@ -480,11 +480,13 @@ local_objfunction = global_objfunction
 local_phase = copy.copy(global_phase)
 temp_objfunction = global_objfunction
 temp_phase = copy.copy(local_phase)
+available_scaffolds_list = list(available_scaffolds)
 for i in range(1000):
     print(i,global_objfunction)
     j = 0
     while(j < 100):
-        flip_position = random.sample(available_scaffolds, 1)[0]
+        print(available_scaffolds_list)
+        flip_position = random.sample(available_scaffolds_list, 1)[0]
         flip_position_index = index[flip_position]
         temp_phase[flip_position_index] = random.choice([value for value in value_ranges[flip_position_index] if value != temp_phase[flip_position_index]])
         temp_objfunction = calculate_score(temp_phase)
@@ -506,7 +508,7 @@ for i in range(1000):
         local_objfunction = global_objfunction
         local_phase = copy.copy(global_phase)
     
-    disturb = random.sample(available_scaffolds, len(available_scaffolds) // 2)
+    disturb = random.sample(available_scaffolds_list, len(available_scaffolds_list) // 2)
     for unitig in disturb:
         flip_position_index = index[unitig]
         local_phase[flip_position_index] = random.choice([value for value in value_ranges[flip_position_index] if value != local_phase[flip_position_index]])
