@@ -3,7 +3,6 @@ import sys
 from collections import defaultdict
 
 def parse_config(config_file):
-    """解析配置文件，返回gap列表"""
     config_vars = {}
     with open(config_file, 'r') as f:
         for line in f:
@@ -23,7 +22,6 @@ def parse_config(config_file):
     return gaps
 
 def process_paf(paf_file):
-    """读取并过滤PAF文件，保留高质量主要比对"""
     paf_records = defaultdict(list)
     with open(paf_file, 'r') as f:
         for line in f:
@@ -38,7 +36,7 @@ def process_paf(paf_file):
                 continue
             
             # 质量控制过滤
-            if mapq <= 30:
+            if mapq <= 10:
                 continue
 
             # 解析比对类型标签
@@ -69,9 +67,9 @@ def determine_orientation(gap, paf_records):
     """确定单个gap的填回方向"""
     chr_name, gap_start, gap_end = gap
     gap_id = f"{chr_name}_gap"
-    records = paf_records.get(gap_id, [])
+    records = paf_records[gap_id]
     if not records:
-        return None
+        return '+'
 
     # 获取gap序列长度
     L = records[0]['query_length']
@@ -84,10 +82,10 @@ def determine_orientation(gap, paf_records):
         right_part_start = L - 100000
 
     # 岸区范围
-    left_flank_start = max(0, gap_start - 20000)
+    left_flank_start = max(0, gap_start - 100000)
     left_flank_end = gap_start
     right_flank_start = gap_end
-    right_flank_end = gap_end + 20000
+    right_flank_end = gap_end + 100000
 
     counters = {'left_left':0, 'left_right':0, 'right_left':0, 'right_right':0}
 
@@ -104,12 +102,12 @@ def determine_orientation(gap, paf_records):
         else:
             continue
 
-        # 判断target区域
+        
         ts, te = record['target_start'], record['target_end']
         overlap_left = (ts < left_flank_end) and (te > left_flank_start)
         overlap_right = (ts < right_flank_end) and (te > right_flank_start)
         if overlap_left and overlap_right:
-            continue  # 忽略重叠两岸的情况
+            continue 
         elif overlap_left:
             flank = 'left'
         elif overlap_right:
@@ -117,7 +115,6 @@ def determine_orientation(gap, paf_records):
         else:
             continue
 
-        # 统计
         key = f"{part}_{flank}"
         if key in counters:
             counters[key] += 1
@@ -131,7 +128,7 @@ def main(config_path, paf_path):
     paf_data = process_paf(paf_path)
     for gap in gaps:
         orientation = determine_orientation(gap, paf_data)
-        print(f"{gap}\t{orientation}")
+        print(f"{gap[0]}\t{orientation}")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

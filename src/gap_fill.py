@@ -25,7 +25,8 @@ def process_paf(paf_file):
                     if opt == 'tp:A:P':
                         is_primary = True
                     break
-            
+            if mapq < 30:
+                continue
             if not is_primary:
                 continue
             qstart = int(parts[2])
@@ -66,14 +67,14 @@ def get_start_end(shore_l, shore_r):
     end = max(all_qends)
     return start, end
 
-def get_optimal_gap_alignment(gap_records, chr_name, gap_len):
+def get_optimal_gap_alignment(gap_records, chr_name, gap_len, default_ori):
     """
     gap_records: dict of align in paf
     chr_name: current chromsome
     """
     start_trim = 0
     end_trim = gap_len
-    ori = "+"
+    ori = default_ori
     if chr_name+"_l" in gap_records:
         shore_l = gap_records[chr_name+"_l"]
         shore_l.sort(key=lambda x: x['qstart'])
@@ -133,11 +134,12 @@ def main():
     parser.add_argument("start", type=int, help="Gap start position (1-based)")
     parser.add_argument("end", type=int, help="Gap end position (1-based)")
     parser.add_argument("out", help="Output file name")
+    parser.add_argument("hic_ori", help="Orientation of HiC")
     args = parser.parse_args()
     # output = args.chromosome+".fasta"
     records = process_paf(args.paf)
     gap_seq = SeqIO.read(args.gap_fasta, "fasta")
-    start_trim, end_trim, ori = get_optimal_gap_alignment(records, args.chromosome, len(gap_seq.seq))
+    start_trim, end_trim, ori = get_optimal_gap_alignment(records, args.chromosome, len(gap_seq.seq), args.hic_ori)
     trimed_seq = gap_seq.seq[start_trim : end_trim]
     if start_trim == 0:
         trimed_seq =Seq.Seq('N'*100 + str(trimed_seq))
@@ -146,10 +148,10 @@ def main():
 
     if ori == '-':
         trimed_seq = trimed_seq.reverse_complement()
-        print(f"The oriorientation of gap filled back for {args.chromosome} is: -")
+        print(f"The orientation of gap filled back for {args.chromosome} is: -")
     else:
-        print(f"The oriorientation of gap filled back for {args.chromosome} is: +")
-    print(f"the trimmed coordation of gap for {args.chromosome} is: {start_trim}\t{end_trim}")
+        print(f"The orientation of gap filled back for {args.chromosome} is: +")
+    # print(f"the trimmed coordation of gap for {args.chromosome} is: {start_trim}\t{end_trim}")
     assembly = SeqIO.parse(args.assembly_fasta, "fasta")
     for chr in assembly:
         if chr.id == args.chromosome:

@@ -60,7 +60,7 @@ If the test workflow finished (The screen show the words: TRFill running finishe
 Workflow of TRFill is easy to run as follow:  
 
 ```sh
-Usage: ./trfill_main.sh [-t THREADS] [-o OUTPUT_PATH] [-f [HiFi/ONT]] [-p] [-b] [-h] -c CONFIG_FILE
+Usage: /data/yangjinbao/software/TRFill/trfill [-t THREADS] [-o OUTPUT_PATH] [-f [HiFi/ONT]] [-p] [-b] [-h] -c CONFIG_FILE
 Required:
   -c CONFIG_FILE    Path to the configuration file
 Options:
@@ -70,6 +70,7 @@ Options:
   -p                When this parameter is enabled, TRFill will conduct phasing assembly for gap regions
   -b                When the format of hifi reads is bam, this parameter is required
   -h                Display this help message
+  -w                Use Hi-C to determined the orientation filled back
 ```
 
 This is a common usage sample:  
@@ -177,12 +178,13 @@ The coordinate boundaries (starts/ends) of gaps in the current assembly relative
 ### 3. Option parameters  
 `-f`: ONT reads can be supported and use this param to enable. But hifi is highly recommended because of the high accuracy.  
 `-b`: For hifi reads input, the format can use bam and TRFill will use `samtools` to switch the bam to fastq. 
+`-w`: This parameter is use hic to determine the direction of gap backfilling and the `minimap2` required.
 
 ### 4. Output
 
-1. The filled chromosomes seq are in the path of `output/final_result`  
+1. The filled chromosomes seq are in the path of `result/final_result`  
 2. For haploid samples, the sequence of gap produced by TRFill is in `result/chrN/scaffolding/hifi_paf_link.available.fa`  
-3. For diploid samples, the two phasing sequences of gap is in `result/chrN/phasing/to_be_phased_centromere.fa`.
+3. For diploid samples, the two phasing sequences of gap is in `result/filled_result/gap_seq/*`  
 
 
 ## Others

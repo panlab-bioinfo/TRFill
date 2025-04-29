@@ -11,7 +11,7 @@ phasing=0
 rtype=HiFi
 fmt=fq
 step=0
-hic_or=0
+hic_ori=0
 
 # process fastq/fa 
 convert_reads() {
@@ -61,11 +61,12 @@ show_help() {
     echo "  -p                When this parameter is enabled, TRFill will conduct phasing assembly for gap regions"
     echo "  -b                When the format of hifi reads is bam, this parameter is required"
     echo "  -h                Display this help message"
+    echo "  -w                Use Hi-C to determined the orientation filled back"
     exit 0
 }
 
 # Parse arguments
-while getopts ":t:k:o:c:f:pbh" opt; do
+while getopts ":t:k:o:c:f:pbwh" opt; do
     case $opt in
         t)
             threads=$OPTARG
@@ -87,6 +88,9 @@ while getopts ":t:k:o:c:f:pbh" opt; do
             ;;
         b)
             fmt=bam
+            ;;
+        w)
+            hic_ori=1
             ;;
         h)
             show_help
@@ -189,8 +193,11 @@ fi
 
 cd $output_path
 
+# ***
 convert_reads $reference reference.fa
- reference=$(pwd)"/reference.fa"
+reference=$(pwd)"/reference.fa"
+
+
 # if [ $phasing -eq 1 ]; then
 #     mkdir -p hic_reads_fa
 #     convert_reads $hic_reads1 hic_reads_fa/hic_R1.fa
@@ -225,12 +232,21 @@ if [ "$step" -ne 1 ]; then
     rm ref.cut.21.kmer ref.raw.21.kmer 
 fi
 
+raw=0
+if [ $raw -eq 1 ];then
+    # meryl count k=15 output reference2hifi.meryl.k15 $reference
+    # meryl print greater-than distinct=0.9998 reference2hifi.meryl.k15 > ref.repetitive.k15.txt
+    # echo "merly constract finished!"
+    # winnowmap -t $threads -W ref.repetitive.k15.txt -x map-pb $reference $reads -o hifi2ref.paf
+    jellyfish count -t $threads -m 21 -s 5G -o ref.21.jf $reference
+    jellyfish dump -c -t -U 3 -o ref.rare.21.kmer ref.21.jf
+fi
 
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] filling gap start"
 ass=1
 if [ $ass -eq 1 ];then
-for ((i = 0; i < ${#chrs[@]}; i++))
+for((i = 0; i < ${#chrs[@]}; i++))
 do
     mkdir -p ${chrs[$i]}
     cd ${chrs[$i]}
@@ -271,7 +287,7 @@ do
     meryl count k=19 output ref.meryl.k19 $reference
     meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
     winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 $reference hifi_paf_link.fa -o hifi_paf_linktochm13.paf
-    # reference genome chromosome name, start and end, contig to reference paf, contig gfa, contig sequence, ploid, available contig sequence, sequence and direction of contig
+    # # reference genome chromosome name, start and end, contig to reference paf, contig gfa, contig sequence, ploid, available contig sequence, sequence and direction of contig
     genetic_algorithm.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} hifi_paf_linktochm13.paf hifi_paf_link.gfa hifi_paf_link.fa $ploid hifi_paf_link.available.fa goal_combination.log > genetic_algorithm.log
     cd ..
 
@@ -297,13 +313,13 @@ do
         kmerpos -t $threads -k 31 -C -o read2.pos mat_pat_hifi_paf_link.available.uniquekmer $hic_reads2 &
         kmerpos -t $threads -k 31 -o ref.pos mat_pat_hifi_paf_link.available.uniquekmer mat_pat_hifi_paf_link.available.fa &
         wait
-        Determine the number of anchored Hi-c > result.log
+        # Determine the number of anchored Hi-c > result.log
         utg_hic_link.scaffold.py mat_pat_hifi_paf_link.available.fa
-        Reference genome chromosome name and start and end, sequence and direction of contig, gfa of contig, available contig sequence, available contig sequence and shore sequence, hic connection, hifi connection
+        # # Reference genome chromosome name and start and end, sequence and direction of contig, gfa of contig, available contig sequence, available contig sequence and shore sequence, hic connection, hifi connection
         phasing_by_simulated_annealing.py ${chrs[$i]} ${starts[$i]} ${ends[$i]} ../scaffolding/goal_combination.log ../scaffolding/hifi_paf_link.gfa ../scaffolding/hifi_paf_link.available.fa mat_pat_hifi_paf_link.available.fa result.log link.log > phasing_by_simulated_annealing.log
 
         # Assign the two sequences to different hap
-        mkdir phase_centromere
+        mkdir -p phase_centromere
         cd phase_centromere
         ln -s ../to_be_phased_centromere.fa to_be_phased_centromere.fa
         cat ../mat_shores.fa ../pat_shores.fa to_be_phased_centromere.fa > mat_pat_centromere.fa
@@ -335,12 +351,12 @@ do
     #     fi
     # done
     cd ..
-    echo "${chrs[$i]} phasing finished!"
-done
+    echo "${chrs[$i]} gap assembly finished!" 
+done 
 fi # if ass
 # Fill back to the assmelby
 echo start fill gap back
-mkdir filled_result
+mkdir -p filled_result
 if [ "$phasing" -eq 0 ]; then
     # argvs: current_assembly_fa gap_sequence gap_Chr_id gap_start gap_end
     echo "Haploid filled"
@@ -351,25 +367,39 @@ if [ "$phasing" -eq 0 ]; then
     # chr_name.shores.fa ../../chrname/scaffolding/hifi_paf_link.available.fa
     
     if [ $hic_ori -eq 1 ];then
-        mkdir hic_aln
+        mkdir -p hic_aln
         cp $assembly hic_aln/assembly_gap.fa
         for ((i = 0; i < ${#chrs[@]}; i++))
         do  
-            awk -v name=${chrs[$i]} '/^>/{print ">"name_gap; next} {print}' ../${chrs[$i]}/scaffolding/hifi_paf_link.available.fa >> hic_aln/assembly_gap.fa
+            awk -v name=${chrs[$i]} '/^>/{print ">"name"_gap"; next} {print}' ../${chrs[$i]}/scaffolding/hifi_paf_link.available.fa >> hic_aln/assembly_gap.fa
         done
         minimap2 -x sr -t $threads hic_aln/assembly_gap.fa -o hic_aln/aln.paf $hic_reads1 $hic_reads2
         gap_ori.py $config_full hic_aln/aln.paf > hic_aln/ori
     fi
-    mkdir final_result
+    # gap_ori.py $config_full hic_aln/aln.paf > hic_aln/ori
+    mkdir -p final_result
+
     for ((i = 0; i < ${#chrs[@]}; i++))
     do
         # ${chrs[$i]} ${starts[$i]} ${ends[$i]}
+        if [ $hic_ori -eq 1 ];then
+            grep "${chrs[$i]}" hic_aln/ori
+            read -r gap_name direction < <(grep "${chrs[$i]}" hic_aln/ori)
+        else
+            direction="+"
+        fi
+        # echo $direction
         mkdir -p tmp
         meryl count k=19 output ref.meryl.k19 shores/${chrs[$i]}.shores.fa
         meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
         winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 shores/${chrs[$i]}.shores.fa ../${chrs[$i]}/scaffolding/hifi_paf_link.available.fa -o tmp/${chrs[$i]}.shores2gap.paf
-        gap_fill.py tmp/${chrs[$i]}.shores2gap.paf $assembly ../${chrs[$i]}/scaffolding/hifi_paf_link.available.fa ${chrs[$i]} ${gap_starts[$i]} ${gap_ends[$i]}  final_result/${chrs[$i]}.fasta
+        # echo tmp/${chrs[$i]}.shores2gap.paf $assembly ../${chrs[$i]}/scaffol7ding/hifi_paf_link.available.fa ${chrs[$i]} ${gap_starts[$i]} ${gap_ends[$i]}  final_result/${chrs[$i]}.fasta  $direction
+        gap_fill.py tmp/${chrs[$i]}.shores2gap.paf $assembly ../${chrs[$i]}/scaffolding/hifi_paf_link.available.fa \
+                    ${chrs[$i]} ${gap_starts[$i]} ${gap_ends[$i]}  \
+                    final_result/${chrs[$i]}.fasta \
+                    $direction
     done
+    cd ..
     # gap sequence Order determination
     
     # declare -i end_dis
@@ -397,34 +427,45 @@ else
     for ((i = 0; i < ${#chrs[@]}; i++))
     do  
         # declare -i phase_mark
-        phase_mark=$(phase_result.py "../../${chrs[$i]}/phasing/phase_centromere/result.log")
-        echo $phase_mark
+        read cen1_id cen1_flag cen1_direction < <(awk 'NR==1 {print $1, $2, $3}' "../${chrs[$i]}/phasing/phase_centromere/result.log")
+        read cen2_id cen2_flag cen2_direction < <(awk 'NR==2 {print $1, $2, $3}' "../${chrs[$i]}/phasing/phase_centromere/result.log")
+        # phase_mark=$(phase_result.py "../${chrs[$i]}/phasing/phase_centromere/result.log")
+        # echo $phase_mark
         # ${chrs[$i]} ${starts[$i]} ${ends[$i]}
-        awk 'NR==1{print $0 > "gap_seq/cen1.fasta"; next}
-            NR==2{print $0 >> "gap_seq/cen1.fasta"; next}
-            NR==3{print $0 > "gap_seq/cen2.fasta"; next}
-            NR==4{print $0 >> "gap_seq/cen2.fasta"}' "../../${chrs[$i]}/phasing/to_be_phased_centromere.fa"
+        awk 'NR==1{print > "gap_seq/cen1.fasta"; next}
+            NR==2{print >> "gap_seq/cen1.fasta"; next}
+            NR==3{print > "gap_seq/cen2.fasta"; next}
+            NR==4{print >> "gap_seq/cen2.fasta"}' "../${chrs[$i]}/phasing/to_be_phased_centromere.fa"
         
         #mat
-        if [ $phase_mark == "1" ]; then
-            gap_mat=gap_seq/cen1.fasta
-            gap_pat=gap_seq/cen2.fasta
-        elif [ $phase_mark == "0" ]; then
-            gap_mat=gap_seq/cen2.fasta
-            gap_pat=gap_seq/cen1.fasta
+        if [ "$cen1_flag" == "mat" ]; then
+            # gap_mat="gap_seq/cen1.fasta"
+            mv gap_seq/cen1.fasta gap_seq/${chrs[$i]}.mat.gap.seq
+            mv gap_seq/cen2.fasta gap_seq/${chrs[$i]}.pat.gap.seq
+            gap_mat=gap_seq/${chrs[$i]}.mat.gap.seq
+            gap_pat=gap_seq/${chrs[$i]}.pat.gap.seq
+            mat_direction="$cen1_direction"
+            pat_direction="$cen2_direction"
+        elif [ "$cen2_flag" == "mat" ]; then
+            mv gap_seq/cen1.fasta gap_seq/${chrs[$i]}.pat.gap.seq
+            mv gap_seq/cen2.fasta gap_seq/${chrs[$i]}.mat.gap.seq
+            gap_mat=gap_seq/${chrs[$i]}.mat.gap.seq
+            gap_pat=gap_seq/${chrs[$i]}.pat.gap.seq
+            mat_direction="$cen2_direction"
+            pat_direction="$cen1_direction"
         else
-            echo "Phasing result is not correct."
+            echo "Phasing result is not correct for mat."
             exit 1
         fi
         mkdir -p tmp
         meryl count k=19 output ref.meryl.k19 shores/mat/${chrs[$i]}.shores.fa
         meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
         winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 shores/mat/${chrs[$i]}.shores.fa $gap_mat -o tmp/${chrs[$i]}.shores2mat.paf
-        gap_fill.py tmp/${chrs[$i]}.shores2mat.paf $assembly_mat $gap_mat  ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]}  final_result/${chrs[$i]}.mat.fasta
+        gap_fill.py tmp/${chrs[$i]}.shores2mat.paf $assembly_mat $gap_mat  ${chrs[$i]} ${mat_starts[$i]} ${mat_ends[$i]}  final_result/${chrs[$i]}.mat.fasta $mat_direction
         meryl count k=19 output ref.meryl.k19 shores/pat/${chrs[$i]}.shores.fa
         meryl print greater-than distinct=0.9998 ref.meryl.k19 > ref.repetitive.k19.txt
         winnowmap -t $threads -W ref.repetitive.k19.txt -x asm5 shores/pat/${chrs[$i]}.shores.fa $gap_pat -o tmp/${chrs[$i]}.shores2pat.paf
-        gap_fill.py tmp/${chrs[$i]}.shores2pat.paf $assembly_pat  $gap_pat ${chrs[$i]} ${pat_starts[$i]} ${pat_ends[$i]}  final_result/${chrs[$i]}.pat.fasta
+        gap_fill.py tmp/${chrs[$i]}.shores2pat.paf $assembly_pat  $gap_pat ${chrs[$i]} ${pat_starts[$i]} ${pat_ends[$i]}  final_result/${chrs[$i]}.pat.fasta $pat_direction
     done
     cd ..
 fi
