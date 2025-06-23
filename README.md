@@ -187,8 +187,15 @@ The coordinate boundaries (starts/ends) of gaps in the current assembly relative
 3. For diploid samples, the two phasing sequences of gap is in `result/filled_result/gap_seq/*`  
 
 
-## Others
-Pending replenishment
+## Others  
+
+## License
+This project is licensed under the Apache License 2.0.
+See the [LICENSE](./LICENSE) file for details.
+
+© [Panweihua Group of AGIS]
+
+
 
 ## Citations
 The TRFill software and correlated algorithm is published in **Jounal(unpublished)**. If you use TRFill, please cite this paper as follows:
