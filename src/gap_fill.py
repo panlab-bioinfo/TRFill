@@ -1,23 +1,23 @@
 #!/bin/env python
-from Bio import SeqIO, Seq
+from Bio.SeqIO import parse as fasta_parse, read as fasta_read
+from Bio.Seq import Seq
 import sys
 import argparse
 from collections import defaultdict
-import statistics
 
 
-def process_paf(paf_file):
+def process_paf(paf_file, gap_len):
     records = defaultdict(list)
     with open(paf_file, 'r') as f:
         for line in f:
             parts = line.strip().split('\t')
-            if len(parts) < 12:  # 确保包含基本字段
+            if len(parts) < 12:
                 continue
-
-            # 解析基础字段
             try:
-                mapq = int(parts[11])  # 第12列是MAPQ
+                mapq = int(parts[11])
             except ValueError:
+                continue
+            if mapq < 30:
                 continue
             is_primary = False
             for opt in parts[12:]:
@@ -25,8 +25,6 @@ def process_paf(paf_file):
                     if opt == 'tp:A:P':
                         is_primary = True
                     break
-            if mapq < 30:
-                continue
             if not is_primary:
                 continue
             qstart = int(parts[2])
@@ -35,9 +33,12 @@ def process_paf(paf_file):
             tname = parts[5]
             tstart = int(parts[7])
             tend = int(parts[8])
-            mapq = int(parts[11].split(':')[-1])
+            # 规范化负链：翻转qstart/qend到正链等效位置
+            if strand == '-':
+                qstart, qend = gap_len - qend, gap_len - qstart
+                strand = '+'  # 规范化后视为正链
             records[tname].append({
-                'tname' : tname,
+                'tname': tname,
                 'qstart': qstart,
                 'qend': qend,
                 'strand': strand,
@@ -48,81 +49,65 @@ def process_paf(paf_file):
     return records
 
 def determine_direction(shore, gap_len):
-    l_half = gap_len/2
-    count = 0
-    for i in shore:
-        if i["qstart"] < l_half:
-            count += 1
-    if count >= len(shore)/2:
-        ori = "l"
+    l_half = gap_len / 2
+    count = sum(1 for i in shore if i["qstart"] < l_half)
+    if count >= len(shore) / 2:
+        return "l"
     else:
-        ori = "r"
-    return ori
-
-
-def get_start_end(shore_l, shore_r):
-    all_qstarts = [x['qstart'] for x in shore_l + shore_r]
-    all_qends = [x['qend'] for x in shore_l + shore_r]
-    start = min(all_qstarts)
-    end = max(all_qends)
-    return start, end
+        return "r"
 
 def get_optimal_gap_alignment(gap_records, chr_name, gap_len, default_ori):
-    """
-    gap_records: dict of align in paf
-    chr_name: current chromsome
-    """
     start_trim = 0
     end_trim = gap_len
     ori = default_ori
-    if chr_name+"_l" in gap_records:
-        shore_l = gap_records[chr_name+"_l"]
-        shore_l.sort(key=lambda x: x['qstart'])
-        ori_l = determine_direction(shore_l, gap_len)
-
-    if chr_name+'_r' in gap_records:
-        shore_r = gap_records[chr_name+'_r']
-        shore_r.sort(key = lambda x: x['qstart'])
-        ori_r = determine_direction(shore_r, gap_len)
-
+    shore_l = gap_records.get(chr_name + "_l", [])
+    shore_r = gap_records.get(chr_name + "_r", [])
     
-    if (ori_l and ori_r):
-        if (ori_l == 'l') and (ori_r == 'r'):
-            start_trim = shore_l[0]["qend"]
-            end_trim = shore_r[-1]["qstart"]
+    ori_l = determine_direction(shore_l, gap_len) if shore_l else None
+    ori_r = determine_direction(shore_r, gap_len) if shore_r else None
+    
+    if ori_l and ori_r:
+        if ori_l == 'l' and ori_r == 'r':
+            if shore_l:
+                start_trim = max(x['qend'] for x in shore_l)
+            if shore_r:
+                end_trim = min(x['qstart'] for x in shore_r)
             ori = "+"
-        elif (ori_l == "r") and (ori_r== 'l'):
-            start_trim = shore_r[0]['qstart']
-            end_trim = shore_l[-1]["qend"]
+        elif ori_l == "r" and ori_r == 'l':
+            if shore_r:
+                start_trim = max(x['qend'] for x in shore_r)
+            if shore_l:
+                end_trim = min(x['qstart'] for x in shore_l)
             ori = "-"
         else:
+            # 不匹配时，回退到default_ori，并使用所有shore的聚合边界
             all_shore = shore_l + shore_r
-            all_shore.sort(key=lambda x: x['qstart'])
-            n = len(all_shore)-1
-            for i in range(0, len(all_shore)):
-                tname1 = all_shore[i]["tname"]
-                tname2 = all_shore[n-i]["tname"] 
-                if tname1 != tname2:
-                    start_trim = all_shore[i]["qend"]
-                    end_trim = all_shore[n-i]["qstart"]
-                    if tname1 == chr_name+"_l":
-                        ori = '+'
-                    else:
-                        ori = "-"
+            if all_shore:
+                start_trim = max(0, max(x['qend'] for x in shore_l) if shore_l else 0)
+                end_trim = min(gap_len, min(x['qstart'] for x in shore_r) if shore_r else gap_len)
+            # 如果default_ori == '-', 后续会reverse
     elif ori_l:
-        if (ori_l == 'l'):
-            start_trim = shore_l[0]["qend"]
+        if ori_l == 'l':
+            start_trim = max(x['qend'] for x in shore_l) if shore_l else 0
             ori = '+'
-        elif (ori_l == "r"):
-            end_trim = shore_l[-1]["qstart"]
+        elif ori_l == "r":
+            end_trim = min(x['qstart'] for x in shore_l) if shore_l else gap_len
             ori = '-'
     elif ori_r:
-        if (ori_r == 'l'):
-            start_trim = shore_l[0]["qend"]
+        if ori_r == 'l':
+            start_trim = max(x['qend'] for x in shore_r) if shore_r else 0
             ori = '-'
-        elif (ori_r == "r"):
-            end_trim = shore_l[-1]["qstart"]
+        elif ori_r == "r":
+            end_trim = min(x['qstart'] for x in shore_r) if shore_r else gap_len
             ori = '+'
+    
+    # 确保start_trim < end_trim
+    if start_trim >= end_trim:
+        print(f"Warning: Invalid trim for {chr_name}, using full sequence with default ori.")
+        start_trim = 0
+        end_trim = gap_len
+        ori = default_ori
+    
     return start_trim, end_trim, ori
 
 def main():
@@ -136,31 +121,39 @@ def main():
     parser.add_argument("out", help="Output file name")
     parser.add_argument("hic_ori", help="Orientation of HiC")
     args = parser.parse_args()
-    # output = args.chromosome+".fasta"
-    records = process_paf(args.paf)
-    gap_seq = SeqIO.read(args.gap_fasta, "fasta")
-    start_trim, end_trim, ori = get_optimal_gap_alignment(records, args.chromosome, len(gap_seq.seq), args.hic_ori)
-    trimed_seq = gap_seq.seq[start_trim : end_trim]
+    
+    gap_seq = fasta_read(args.gap_fasta, "fasta")
+    gap_len = len(gap_seq.seq)
+    records = process_paf(args.paf, gap_len)
+    start_trim, end_trim, ori = get_optimal_gap_alignment(records, args.chromosome, gap_len, args.hic_ori)
+    
+    trimed_seq = gap_seq.seq[start_trim:end_trim]
     if start_trim == 0:
-        trimed_seq =Seq.Seq('N'*100 + str(trimed_seq))
-    if end_trim == len(gap_seq):
-        trimed_seq = Seq.Seq(str(trimed_seq)+ 'N'*100)
-
+        trimed_seq = Seq('N' * 100 + str(trimed_seq))
+    if end_trim == gap_len:
+        trimed_seq = Seq(str(trimed_seq) + 'N' * 100)
+    
     if ori == '-':
         trimed_seq = trimed_seq.reverse_complement()
         print(f"The orientation of gap filled back for {args.chromosome} is: -")
     else:
         print(f"The orientation of gap filled back for {args.chromosome} is: +")
-    # print(f"the trimmed coordation of gap for {args.chromosome} is: {start_trim}\t{end_trim}")
-    assembly = SeqIO.parse(args.assembly_fasta, "fasta")
-    for chr in assembly:
-        if chr.id == args.chromosome:
-            chr_seq = str(chr.seq)
-            chromosome = chr_seq[:args.start] + str(trimed_seq) + chr_seq[args.end:]
+    
+    print(f"Trimmed length: {len(trimed_seq)}")
+    
+    found = False
+    for chr_record in fasta_parse(args.assembly_fasta, "fasta"):
+        if chr_record.id == args.chromosome:
+            chr_seq = str(chr_record.seq)
+            # 修正切片：替换1-based start到end (inclusive)
+            chromosome = chr_seq[:args.start - 1] + str(trimed_seq) + chr_seq[args.end:]
             with open(args.out, "w") as file:
-                file.write(f">{str(chr.id)}\n")
+                file.write(f">{chr_record.id}\n")
                 file.write(f"{chromosome}\n")
-    print(len(trimed_seq))
+            found = True
+            break
+    if not found:
+        print(f"Error: Chromosome {args.chromosome} not found in assembly_fasta.", file=sys.stderr)
 
 if __name__ == "__main__":
     main()

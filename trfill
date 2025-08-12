@@ -134,7 +134,6 @@ if [ "$fmt" = "bam" ]; then
 fi
 echo "All required software are installed."
 
-#!/bin/bash
 
 # Function to load configuration based on phasing value
 load_config() {
@@ -361,7 +360,7 @@ if [ "$phasing" -eq 0 ]; then
     # argvs: current_assembly_fa gap_sequence gap_Chr_id gap_start gap_end
     echo "Haploid filled"
     cd filled_result
-    mkdir shores
+    mkdir -p shores
     # output:{chr_name}.shores.fa
     exact_assembly_hap.py $assembly $config_full shores/
     # chr_name.shores.fa ../../chrname/scaffolding/hifi_paf_link.available.fa
@@ -423,7 +422,7 @@ else
     # output:{chr_name}.shores.fa
     exact_assembly_dip.py $config_full shores/
     mkdir hic_aln
-    mkdir final_result
+    mkdir -p final_result
     for ((i = 0; i < ${#chrs[@]}; i++))
     do  
         # declare -i phase_mark
@@ -470,6 +469,6 @@ else
     cd ..
 fi
 # cd ..
-ln -s $PWD/filled_result/final_result
+# ln -s $PWD/filled_result/final_result 
 
 echo "TRFill running finished!"
