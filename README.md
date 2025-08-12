@@ -39,7 +39,7 @@ cd ..
 # add the dictionary to environment variable
 export PATH=$PATH:$(pwd)
 # pilot run
-trfill_main.sh
+trfill
 ```
 ### Sample test
 We provide a small sample dataset to test whether the program installed successfully. You can unzip it and test by the following command:
@@ -48,7 +48,7 @@ We provide a small sample dataset to test whether the program installed successf
 # unzip the sample file
 tar -Jxvf sample.tar.xz
 cd sample
-../trfill_main.sh -c config.txt -o result
+../trfill -c config.txt -o result
 ```  
 
 If the test workflow finished (The screen show the words: TRFill running finished!), the TRFill program install successfully.  
@@ -74,7 +74,7 @@ Options:
 ```
 
 This is a common usage sample:  
-`./trfill_main.sh -t 32 -o trf_result -c haploid.config.txt`  
+`./trfill -t 32 -o trf_result -c haploid.config.txt`  
 
 
 ### 2. Input
@@ -82,7 +82,7 @@ The key parameter for TRFill are specified in two configuration files. Depending
 
 **2.1 For haploaid assembly:**
 ```sh
-trfill_main.sh -o result -c haploid.config.txt
+trfill -o result -c haploid.config.txt
 ```
 The details of the haploid config as follow.
 
@@ -125,7 +125,7 @@ gap_ends=(15471497 8737488 9300453 463125 5603233)
 **2.2 For diploid assembly:**
 When performing diploid assembly, an additional parameter -p must be included to indicate that the assembly is for a diploid genome. Below are examples of how to use these options: 
 ```sh
-trfill_main.sh -p -o result -c diploid.config.txt
+trfill -p -o result -c diploid.config.txt
 ```
 The configuration file for diploid mode is mostly similar to that of haploid mode. The key differences are:
 
