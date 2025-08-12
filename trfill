@@ -469,6 +469,6 @@ else
     cd ..
 fi
 # cd ..
-# ln -s $PWD/filled_result/final_result 
+ln -s $PWD/filled_result/final_result 
 
 echo "TRFill running finished!"
